@@ -163,6 +163,7 @@
 			</view>
 		</view>
 		<uni-load-more :status="loadingType"></uni-load-more>
+		<PcFooter />
 		</view>
 	</view>
 </template>

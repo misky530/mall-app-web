@@ -17,6 +17,7 @@
 					</view>
 				</view>
 			</view>
+			<PcFooter />
 		</view>
 	</view>
 </template>
