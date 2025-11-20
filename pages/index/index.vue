@@ -1,6 +1,6 @@
 <template>
-	<view class="container">
-		<!-- 小程序头部兼容 -->
+	<view class="container pc-wrapper">
+		<view class="pc-container">
 		<!-- #ifdef MP -->
 		<view class="mp-search-box">
 			<input class="ser-input" type="text" value="输入关键字搜索" disabled />
@@ -162,6 +162,7 @@
 			</view>
 		</view>
 		<uni-load-more :status="loadingType"></uni-load-more>
+		</view>
 	</view>
 </template>
 
