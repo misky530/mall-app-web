@@ -57,14 +57,16 @@ const loading = ref(false)
 // Mock 商品数据生成
 const generateMockProducts = (count, prefix) => {
   const products = []
+  const baseTime = Date.now()
+
   for (let i = 1; i <= count; i++) {
     products.push({
-      id: Date.now() + i,
+      id: baseTime + i,
       name: `${prefix}商品 ${i}`,
       subTitle: '精选优质商品，品质保证',
       price: Math.floor(Math.random() * 500) + 50,
       originalPrice: Math.floor(Math.random() * 800) + 200,
-      pic: `https://via.placeholder.com/300x300?text=${prefix}+${i}`,
+      pic: `https://images.unsplash.com/photo-${1600000000000 + (baseTime % 1000) * 1000 + i * 10000}?w=300&h=300&fit=crop&auto=format`,
       sale: Math.floor(Math.random() * 5000),
       stock: Math.floor(Math.random() * 100) + 20,
       newStatus: prefix === '新品' ? 1 : 0,

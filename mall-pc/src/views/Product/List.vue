@@ -74,14 +74,17 @@ const selectedPriceRange = computed(() => {
 // Mock 商品数据（降级方案）
 const generateMockProducts = () => {
   const mockProducts = []
+  const categories = ['fashion', 'tech', 'food', 'furniture', 'beauty', 'sports', 'books', 'toys']
+
   for (let i = 1; i <= 12; i++) {
+    const category = categories[i % categories.length]
     mockProducts.push({
       id: i,
       name: `精选商品 ${i}`,
       subTitle: '高品质商品，值得信赖',
       price: Math.floor(Math.random() * 1000) + 100,
       originalPrice: Math.floor(Math.random() * 1500) + 500,
-      pic: `https://via.placeholder.com/300x300?text=Product+${i}`,
+      pic: `https://images.unsplash.com/photo-${1500000000000 + i * 100000}?w=300&h=300&fit=crop&auto=format`,
       sale: Math.floor(Math.random() * 10000),
       stock: Math.floor(Math.random() * 100) + 10,
       newStatus: Math.random() > 0.5 ? 1 : 0,
