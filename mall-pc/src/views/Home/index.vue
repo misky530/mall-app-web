@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { ArrowRight } from '@element-plus/icons-vue'
 import ProductCard from '@/components/Product/ProductCard.vue'
@@ -7,6 +8,7 @@ import { useCartStore } from '@/stores/cart'
 import { useProductStore } from '@/stores/product'
 import * as homeApi from '@/api/home'
 
+const router = useRouter()
 const cartStore = useCartStore()
 const productStore = useProductStore()
 
@@ -144,7 +146,10 @@ const handleAddToCart = (product) => {
 
 // 跳转到分类
 const goToCategory = (category) => {
-  console.log('跳转到分类：', category)
+  router.push({
+    path: '/product/list',
+    query: { categoryId: category.id, categoryName: category.name }
+  })
 }
 
 // 查看更多

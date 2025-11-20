@@ -26,13 +26,32 @@ const formattedPrice = computed(() => {
 const formattedOriginalPrice = computed(() => {
   return props.product.originalPrice ? `¥${props.product.originalPrice.toFixed(2)}` : ''
 })
+
+// 图片加载错误处理
+const handleImageError = (e) => {
+  // 使用灰色占位背景
+  e.target.style.display = 'none'
+  e.target.parentElement.style.background = '#f0f0f0'
+  e.target.parentElement.innerHTML = `
+    <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #999; font-size: 14px;">
+      <div style="text-align: center;">
+        <div style="font-size: 48px; margin-bottom: 8px;">📦</div>
+        <div>暂无图片</div>
+      </div>
+    </div>
+  `
+}
 </script>
 
 <template>
   <div class="product-card" @click="goToDetail">
     <!-- 商品图片 -->
     <div class="product-image">
-      <img :src="product.pic || 'https://via.placeholder.com/300x300'" :alt="product.name" />
+      <img
+        :src="product.pic || '/placeholder-product.png'"
+        :alt="product.name"
+        @error="handleImageError"
+      />
       <div class="product-tag" v-if="product.newStatus === 1">
         <el-tag type="danger" size="small">新品</el-tag>
       </div>

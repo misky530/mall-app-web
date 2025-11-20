@@ -135,6 +135,30 @@ const handleBuyNow = () => {
   router.push('/cart')
 }
 
+// 主图加载错误处理
+const handleMainImageError = (e) => {
+  e.target.style.display = 'none'
+  e.target.parentElement.innerHTML = `
+    <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #f0f0f0; color: #999;">
+      <div style="text-align: center;">
+        <div style="font-size: 80px; margin-bottom: 16px;">📦</div>
+        <div style="font-size: 16px;">暂无图片</div>
+      </div>
+    </div>
+  `
+}
+
+// 缩略图加载错误处理
+const handleThumbImageError = (e) => {
+  e.target.style.display = 'none'
+  e.target.parentElement.style.background = '#f0f0f0'
+  e.target.parentElement.innerHTML = `
+    <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #999; font-size: 24px;">
+      📦
+    </div>
+  `
+}
+
 onMounted(() => {
   fetchProductDetail()
 })
@@ -150,13 +174,21 @@ onMounted(() => {
         <el-breadcrumb-item>商品详情</el-breadcrumb-item>
       </el-breadcrumb>
 
-      <div v-if="productDetail" class="detail-content">
+      <!-- 无数据提示 -->
+      <el-empty v-if="!productDetail && !loading" description="商品不存在或已下架" />
+
+      <!-- 商品详情内容 -->
+      <div v-if="productDetail && !loading" class="detail-content">
         <!-- 商品主要信息 -->
         <div class="product-main">
           <!-- 商品图片 -->
           <div class="product-gallery">
             <div class="main-image">
-              <img :src="currentImage" :alt="productDetail.name" />
+              <img
+                :src="currentImage"
+                :alt="productDetail.name"
+                @error="handleMainImageError"
+              />
             </div>
             <div class="image-list">
               <div
@@ -165,7 +197,7 @@ onMounted(() => {
                 :class="['image-item', { active: currentImageIndex === index }]"
                 @click="handleImageChange(index)"
               >
-                <img :src="image" alt="" />
+                <img :src="image" alt="" @error="handleThumbImageError" />
               </div>
             </div>
           </div>
