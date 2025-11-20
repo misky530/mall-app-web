@@ -1,0 +1,141 @@
+@import './variables.scss';
+
+/* 容器布局 */
+.container {
+  width: $container-width;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 0 $spacing-base;
+}
+
+/* 文字工具类 */
+.text-primary {
+  color: $text-primary;
+}
+
+.text-regular {
+  color: $text-regular;
+}
+
+.text-secondary {
+  color: $text-secondary;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-left {
+  text-align: left;
+}
+
+.text-right {
+  text-align: right;
+}
+
+/* 间距工具类 */
+.mt-small {
+  margin-top: $spacing-small;
+}
+
+.mt-base {
+  margin-top: $spacing-base;
+}
+
+.mt-large {
+  margin-top: $spacing-large;
+}
+
+.mb-small {
+  margin-bottom: $spacing-small;
+}
+
+.mb-base {
+  margin-bottom: $spacing-base;
+}
+
+.mb-large {
+  margin-bottom: $spacing-large;
+}
+
+/* Flex布局 */
+.flex {
+  display: flex;
+}
+
+.flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.flex-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.flex-around {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+}
+
+.flex-column {
+  display: flex;
+  flex-direction: column;
+}
+
+.flex-1 {
+  flex: 1;
+}
+
+/* 超出省略 */
+.ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ellipsis-2 {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 卡片样式 */
+.card {
+  background: $bg-white;
+  border-radius: $border-radius-base;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: $spacing-base;
+}
+
+/* 主色按钮 */
+.btn-primary {
+  background-color: $primary-color;
+  color: white;
+  padding: 10px 20px;
+  border-radius: $border-radius-base;
+  transition: all 0.3s;
+
+  &:hover {
+    opacity: 0.8;
+  }
+}
+
+/* 分割线 */
+.divider {
+  height: 1px;
+  background-color: $border-light;
+  margin: $spacing-base 0;
+}
+
+/* 清除浮动 */
+.clearfix::after {
+  content: '';
+  display: block;
+  clear: both;
+}
