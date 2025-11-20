@@ -1,5 +1,6 @@
 <template>
 	<view class="pc-wrapper">
+		<PcHeader />
 		<view class="pc-container">
 			<view class="content">
 				<view class="left-aside">

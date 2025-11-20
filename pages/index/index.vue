@@ -1,5 +1,6 @@
 <template>
 	<view class="container pc-wrapper">
+		<PcHeader />
 		<view class="pc-container">
 		<!-- #ifdef MP -->
 		<view class="mp-search-box">
