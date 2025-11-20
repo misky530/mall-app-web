@@ -54,32 +54,71 @@ const hotProductList = ref([])
 // 加载状态
 const loading = ref(false)
 
+// Mock 商品数据生成
+const generateMockProducts = (count, prefix) => {
+  const products = []
+  for (let i = 1; i <= count; i++) {
+    products.push({
+      id: Date.now() + i,
+      name: `${prefix}商品 ${i}`,
+      subTitle: '精选优质商品，品质保证',
+      price: Math.floor(Math.random() * 500) + 50,
+      originalPrice: Math.floor(Math.random() * 800) + 200,
+      pic: `https://via.placeholder.com/300x300?text=${prefix}+${i}`,
+      sale: Math.floor(Math.random() * 5000),
+      stock: Math.floor(Math.random() * 100) + 20,
+      newStatus: prefix === '新品' ? 1 : 0,
+      recommendStatus: prefix === '推荐' ? 1 : 0
+    })
+  }
+  return products
+}
+
 // 获取首页数据
 const fetchHomeData = async () => {
   loading.value = true
   try {
     // 获取推荐商品
-    const recommendRes = await homeApi.fetchRecommendProductList({ pageNum: 1, pageSize: 8 })
-    if (recommendRes.data) {
-      recommendList.value = recommendRes.data.list || []
+    try {
+      const recommendRes = await homeApi.fetchRecommendProductList({ pageNum: 1, pageSize: 8 })
+      if (recommendRes && recommendRes.data) {
+        recommendList.value = recommendRes.data.list || []
+      }
+    } catch (error) {
+      console.warn('推荐商品API失败，使用Mock数据')
+      recommendList.value = generateMockProducts(8, '推荐')
     }
 
     // 获取新品
-    const newRes = await homeApi.fetchNewProductList({ pageNum: 1, pageSize: 8 })
-    if (newRes.data) {
-      newProductList.value = newRes.data.list || []
+    try {
+      const newRes = await homeApi.fetchNewProductList({ pageNum: 1, pageSize: 8 })
+      if (newRes && newRes.data) {
+        newProductList.value = newRes.data.list || []
+      }
+    } catch (error) {
+      console.warn('新品API失败，使用Mock数据')
+      newProductList.value = generateMockProducts(8, '新品')
     }
 
     // 获取热销商品
-    const hotRes = await homeApi.fetchHotProductList({ pageNum: 1, pageSize: 8 })
-    if (hotRes.data) {
-      hotProductList.value = hotRes.data.list || []
+    try {
+      const hotRes = await homeApi.fetchHotProductList({ pageNum: 1, pageSize: 8 })
+      if (hotRes && hotRes.data) {
+        hotProductList.value = hotRes.data.list || []
+      }
+    } catch (error) {
+      console.warn('热销商品API失败，使用Mock数据')
+      hotProductList.value = generateMockProducts(8, '热销')
     }
 
     // 获取分类
-    const categoryRes = await homeApi.fetchProductCateList(0)
-    if (categoryRes.data && categoryRes.data.length > 0) {
-      productStore.setCategoryList(categoryRes.data)
+    try {
+      const categoryRes = await homeApi.fetchProductCateList(0)
+      if (categoryRes && categoryRes.data && categoryRes.data.length > 0) {
+        productStore.setCategoryList(categoryRes.data)
+      }
+    } catch (error) {
+      console.warn('分类API失败')
     }
   } catch (error) {
     console.error('获取首页数据失败：', error)
