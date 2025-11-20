@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { ShoppingCart } from '@element-plus/icons-vue'
+import { useCartStore } from '@/stores/cart'
 
 const props = defineProps({
   product: {
@@ -11,6 +12,7 @@ const props = defineProps({
 })
 
 const router = useRouter()
+const cartStore = useCartStore()
 
 // 跳转到商品详情
 const goToDetail = () => {
@@ -40,6 +42,15 @@ const handleImageError = (e) => {
       </div>
     </div>
   `
+}
+
+// 加入购物车
+const handleAddToCart = () => {
+  cartStore.addItem({
+    productId: props.product.id,
+    quantity: 1
+    // skuId: '...' // 如果有规格，需要传入规格ID
+  })
 }
 </script>
 
@@ -84,7 +95,7 @@ const handleImageError = (e) => {
         type="primary"
         :icon="ShoppingCart"
         size="small"
-        @click.stop="$emit('addToCart', product)"
+        @click.stop="handleAddToCart"
       >
         加入购物车
       </el-button>

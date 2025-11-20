@@ -1,15 +1,12 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
 import { ArrowRight } from '@element-plus/icons-vue'
 import ProductCard from '@/components/Product/ProductCard.vue'
-import { useCartStore } from '@/stores/cart'
 import { useProductStore } from '@/stores/product'
 import * as homeApi from '@/api/home'
 
 const router = useRouter()
-const cartStore = useCartStore()
 const productStore = useProductStore()
 
 // 轮播图数据
@@ -131,19 +128,6 @@ const fetchHomeData = async () => {
   }
 }
 
-// 加入购物车
-const handleAddToCart = (product) => {
-  cartStore.addToCart({
-    id: Date.now(),
-    productId: product.id,
-    name: product.name,
-    pic: product.pic,
-    price: product.price,
-    quantity: 1
-  })
-  ElMessage.success('已加入购物车')
-}
-
 // 跳转到分类
 const goToCategory = (category) => {
   router.push({
@@ -220,7 +204,6 @@ onMounted(() => {
             v-for="product in recommendList"
             :key="product.id"
             :product="product"
-            @add-to-cart="handleAddToCart"
           />
         </div>
         <el-empty v-if="!loading && recommendList.length === 0" description="暂无推荐商品" />
@@ -245,7 +228,6 @@ onMounted(() => {
             v-for="product in newProductList"
             :key="product.id"
             :product="product"
-            @add-to-cart="handleAddToCart"
           />
         </div>
         <el-empty v-if="!loading && newProductList.length === 0" description="暂无新品" />
@@ -270,7 +252,6 @@ onMounted(() => {
             v-for="product in hotProductList"
             :key="product.id"
             :product="product"
-            @add-to-cart="handleAddToCart"
           />
         </div>
         <el-empty v-if="!loading && hotProductList.length === 0" description="暂无热销商品" />

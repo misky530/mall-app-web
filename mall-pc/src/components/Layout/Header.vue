@@ -1,4 +1,5 @@
 <script setup>
+import { onMounted, watch, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { useCartStore } from '@/stores/cart'
@@ -39,8 +40,32 @@ const goToProfile = () => {
 // 退出登录
 const handleLogout = () => {
   userStore.logout()
+  // 退出后清空购物车
+  cartStore.cartList = []
+  cartStore.selectedIds = []
   router.push('/')
 }
+
+// 如果已登录，获取购物车数据
+const loadCartData = () => {
+  if (userStore.isLogin) {
+    cartStore.fetchCart()
+  }
+}
+
+onMounted(() => {
+  loadCartData()
+})
+
+// 监听登录状态变化
+watch(
+  () => userStore.isLogin,
+  (isLogin) => {
+    if (isLogin) {
+      loadCartData()
+    }
+  }
+)
 </script>
 
 <template>

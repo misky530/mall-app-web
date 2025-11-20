@@ -1,54 +1,69 @@
 import request from '@/utils/request'
 
 /**
- * 添加购物车商品
+ * 获取购物车列表
  */
-export function addCartItem(data) {
+export function getCartList() {
   return request({
-    method: 'POST',
+    url: '/cart/list',
+    method: 'get'
+  })
+}
+
+/**
+ * 添加商品到购物车
+ * @param {object} data - { productId, skuId, quantity }
+ */
+export function addToCart(data) {
+  return request({
     url: '/cart/add',
+    method: 'post',
     data
   })
 }
 
 /**
- * 获取购物车列表
- */
-export function fetchCartList() {
-  return request({
-    method: 'GET',
-    url: '/cart/list'
-  })
-}
-
-/**
- * 删除购物车商品
- */
-export function deleteCartItem(params) {
-  return request({
-    method: 'POST',
-    url: '/cart/delete',
-    params
-  })
-}
-
-/**
  * 更新购物车商品数量
+ * @param {object} data - { cartId, quantity }
  */
-export function updateQuantity(params) {
+export function updateCartItemQuantity(data) {
   return request({
-    method: 'GET',
-    url: '/cart/update/quantity',
-    params
+    url: `/cart/update/quantity`,
+    method: 'post',
+    data
   })
 }
 
 /**
- * 清空购物车
+ * 移除购物车商品
+ * @param {object} data - { cartIds }
  */
-export function clearCartList() {
+export function removeCartItems(data) {
   return request({
-    method: 'POST',
-    url: '/cart/clear'
+    url: `/cart/delete`,
+    method: 'post',
+    data
   })
+}
+
+/**
+ * 全选或取消全选购物车
+ * @param {object} data - { checked }
+ */
+export function checkAllCartItems(data) {
+  return request({
+    url: '/cart/checkAll',
+    method: 'post',
+    data
+  })
+}
+
+/**
+ * 获取购物车商品总数
+ */
+export function getCartItemCount() {
+    return request({
+        url: '/cart/getProductCount',
+        method: 'get'
+    })
 }

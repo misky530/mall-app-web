@@ -1,14 +1,11 @@
 <script setup>
 import { ref, onMounted, watch, computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { ElMessage } from 'element-plus'
 import { Grid, List as ListIcon } from '@element-plus/icons-vue'
 import ProductCard from '@/components/Product/ProductCard.vue'
-import { useCartStore } from '@/stores/cart'
 import * as productApi from '@/api/product'
 
 const route = useRoute()
-const cartStore = useCartStore()
 
 // 视图模式：grid 或 list
 const viewMode = ref('grid')
@@ -158,19 +155,6 @@ const handlePageChange = (page) => {
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
-// 加入购物车
-const handleAddToCart = (product) => {
-  cartStore.addToCart({
-    id: Date.now(),
-    productId: product.id,
-    name: product.name,
-    pic: product.pic,
-    price: product.price,
-    quantity: 1
-  })
-  ElMessage.success('已加入购物车')
-}
-
 // 监听路由变化
 watch(
   () => route.query,
@@ -280,7 +264,6 @@ onMounted(() => {
                 v-for="product in productList"
                 :key="product.id"
                 :product="product"
-                @add-to-cart="handleAddToCart"
               />
             </div>
             <el-empty v-else description="暂无商品" />
