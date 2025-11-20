@@ -1,18 +1,22 @@
 <template>
-	<view class="content">
-		<scroll-view scroll-y class="left-aside">
-			<view v-for="item in flist" :key="item.id" class="f-item b-b" :class="{active: item.id === currentId}" @click="tabtap(item)">
-				{{item.name}}
-			</view>
-		</scroll-view>
-		<scroll-view scroll-with-animation scroll-y class="right-aside">
-			<view class="s-list">
-				<view @click="navToList(item.id)" class="s-item" v-for="item in slist" :key="item.id">
-					<image :src="item.icon||'http://macro-oss.oss-cn-shenzhen.aliyuncs.com/mall/images/20190519/default.png'"></image>
-					<text>{{item.name}}</text>
+	<view class="pc-wrapper">
+		<view class="pc-container">
+			<view class="content">
+				<view class="left-aside">
+					<view v-for="item in flist" :key="item.id" class="f-item b-b" :class="{active: item.id === currentId}" @click="tabtap(item)">
+						{{item.name}}
+					</view>
+				</view>
+				<view class="right-aside">
+					<view class="s-list">
+						<view @click="navToList(item.id)" class="s-item" v-for="item in slist" :key="item.id">
+							<image :src="item.icon||'http://macro-oss.oss-cn-shenzhen.aliyuncs.com/mall/images/20190519/default.png'"></image>
+							<text>{{item.name}}</text>
+						</view>
+					</view>
 				</view>
 			</view>
-		</scroll-view>
+		</view>
 	</view>
 </template>
 
@@ -60,6 +64,47 @@
 </script>
 
 <style lang='scss'>
+	/* #ifdef H5 */
+	.pc-wrapper {
+		display: flex;
+		justify-content: center;
+		background-color: #f8f8f8;
+		min-height: 100vh;
+	}
+
+	.pc-container {
+		max-width: 1200px;
+		width: 100%;
+		background-color: #fff;
+		box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+		padding: 20px;
+	}
+
+	@media (min-width: 768px) {
+		.left-aside {
+			width: 200px; /* PC端左侧导航固定宽度 */
+		}
+		.f-item {
+			font-size: 16px; /* 增大字体 */
+			height: 50px;
+		}
+		.right-aside {
+			padding-left: 20px;
+		}
+		.s-list {
+			margin-top: 0;
+		}
+		.s-item {
+			width: 20%; /* PC端显示5列 */
+			font-size: 14px;
+			image {
+				width: 100px;
+				height: 100px;
+			}
+		}
+	}
+	/* #endif */
+
 	page,
 	.content {
 		height: 100%;
