@@ -15,7 +15,7 @@
 			<view class="titleNview-background" :style="{backgroundColor:titleNViewBackground}"></view>
 			<swiper class="carousel" circular @change="swiperChange">
 				<swiper-item v-for="(item, index) in advertiseList" :key="index" class="carousel-item" @click="navToAdvertisePage(item)">
-					<image :src="item.pic" />
+					<image :src="item.pic" mode="aspectFill" />
 				</swiper-item>
 			</swiper>
 			<!-- 自定义swiper指示器 -->
