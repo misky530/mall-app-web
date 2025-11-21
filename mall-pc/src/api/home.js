@@ -1,7 +1,7 @@
 import request from '@/utils/request'
 
 /**
- * 获取首页内容
+ * 获取首页全部内容（包含轮播、品牌、秒杀、新品、热销等）
  */
 export function fetchContent() {
   return request({

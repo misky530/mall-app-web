@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { ArrowRight } from '@element-plus/icons-vue'
 import ProductCard from '@/components/Product/ProductCard.vue'
@@ -10,26 +10,13 @@ const router = useRouter()
 const productStore = useProductStore()
 
 // 轮播图数据
-const bannerList = ref([
-  {
-    id: 1,
-    pic: 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=1200&h=400&fit=crop',
-    title: '春季新品上市',
-    subtitle: '限时优惠，低至5折'
-  },
-  {
-    id: 2,
-    pic: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200&h=400&fit=crop',
-    title: '品质生活',
-    subtitle: '精选好物，品质保证'
-  },
-  {
-    id: 3,
-    pic: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?w=1200&h=400&fit=crop',
-    title: '潮流时尚',
-    subtitle: '紧跟潮流，彰显个性'
-  }
-])
+const bannerList = ref([])
+
+// 品牌列表
+const brandList = ref([])
+
+// 秒杀专区
+const homeFlashPromotion = ref(null)
 
 // 分类数据（将从 API 获取）
 const categoryList = ref([])
@@ -59,6 +46,38 @@ const hotProductList = ref([])
 // 加载状态
 const loading = ref(false)
 
+// 秒杀倒计时
+const flashCountdown = ref({ hours: 0, minutes: 0, seconds: 0 })
+
+// 计算秒杀倒计时
+const updateFlashCountdown = () => {
+  if (!homeFlashPromotion.value || !homeFlashPromotion.value.endTime) return
+
+  const endTime = new Date(homeFlashPromotion.value.endTime)
+  const now = new Date()
+
+  // 设置今天的结束时间
+  const today = new Date()
+  today.setHours(endTime.getHours())
+  today.setMinutes(endTime.getMinutes())
+  today.setSeconds(endTime.getSeconds())
+
+  const diff = today.getTime() - now.getTime()
+
+  if (diff > 0) {
+    flashCountdown.value.hours = Math.floor(diff / (1000 * 60 * 60))
+    flashCountdown.value.minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
+    flashCountdown.value.seconds = Math.floor((diff % (1000 * 60)) / 1000)
+  } else {
+    flashCountdown.value = { hours: 0, minutes: 0, seconds: 0 }
+  }
+}
+
+// 格式化倒计时数字
+const formatTime = (num) => {
+  return num.toString().padStart(2, '0')
+}
+
 // Mock 商品数据生成
 const generateMockProducts = (count, prefix) => {
   const products = []
@@ -85,35 +104,48 @@ const generateMockProducts = (count, prefix) => {
 const fetchHomeData = async () => {
   loading.value = true
   try {
-    // 获取推荐商品
+    // 使用 /home/content API 一次性获取所有首页数据
+    const contentRes = await homeApi.fetchContent()
+    if (contentRes && contentRes.data) {
+      const data = contentRes.data
+
+      // 轮播图
+      if (data.advertiseList && data.advertiseList.length > 0) {
+        bannerList.value = data.advertiseList
+      }
+
+      // 品牌列表
+      if (data.brandList && data.brandList.length > 0) {
+        brandList.value = data.brandList
+      }
+
+      // 秒杀专区
+      if (data.homeFlashPromotion) {
+        homeFlashPromotion.value = data.homeFlashPromotion
+        // 开始倒计时
+        updateFlashCountdown()
+        setInterval(updateFlashCountdown, 1000)
+      }
+
+      // 新品列表
+      if (data.newProductList && data.newProductList.length > 0) {
+        newProductList.value = data.newProductList
+      }
+
+      // 热销商品
+      if (data.hotProductList && data.hotProductList.length > 0) {
+        hotProductList.value = data.hotProductList
+      }
+    }
+
+    // 单独获取推荐商品（使用独立API支持分页）
     try {
       const recommendRes = await homeApi.fetchRecommendProductList({ pageNum: 1, pageSize: 8 })
       if (recommendRes && recommendRes.data) {
-        // API 直接返回数组，不是嵌套在 list 中
         recommendList.value = Array.isArray(recommendRes.data) ? recommendRes.data : []
       }
     } catch (error) {
       console.warn('推荐商品API失败', error)
-    }
-
-    // 获取新品
-    try {
-      const newRes = await homeApi.fetchNewProductList({ pageNum: 1, pageSize: 8 })
-      if (newRes && newRes.data) {
-        newProductList.value = Array.isArray(newRes.data) ? newRes.data : []
-      }
-    } catch (error) {
-      console.warn('新品API失败', error)
-    }
-
-    // 获取热销商品
-    try {
-      const hotRes = await homeApi.fetchHotProductList({ pageNum: 1, pageSize: 8 })
-      if (hotRes && hotRes.data) {
-        hotProductList.value = Array.isArray(hotRes.data) ? hotRes.data : []
-      }
-    } catch (error) {
-      console.warn('热销商品API失败', error)
     }
 
     // 获取分类
@@ -152,6 +184,18 @@ const viewMore = (type) => {
   console.log('查看更多：', type)
 }
 
+// 跳转到品牌详情
+const goToBrand = (brand) => {
+  // 暂时跳转到商品列表，按品牌筛选
+  // 后续可以添加品牌详情页
+  console.log('跳转到品牌：', brand.name)
+}
+
+// 跳转到商品详情
+const goToProduct = (product) => {
+  router.push(`/product/detail/${product.id}`)
+}
+
 onMounted(() => {
   fetchHomeData()
 })
@@ -165,13 +209,35 @@ onMounted(() => {
         <el-carousel height="400px" :interval="4000" arrow="always">
           <el-carousel-item v-for="item in bannerList" :key="item.id">
             <div class="banner-item" :style="{ backgroundImage: `url(${item.pic})` }">
-              <div class="banner-content">
-                <h2>{{ item.title }}</h2>
-                <p>{{ item.subtitle }}</p>
-              </div>
             </div>
           </el-carousel-item>
         </el-carousel>
+      </div>
+    </section>
+
+    <!-- 品牌制造商直供 -->
+    <section v-if="brandList.length > 0" class="brand-section-top">
+      <div class="container">
+        <div class="section-header">
+          <div>
+            <h2>品牌制造商直供</h2>
+            <p>工厂直达消费者，剔除品牌溢价</p>
+          </div>
+        </div>
+        <div class="brand-grid">
+          <div
+            v-for="brand in brandList"
+            :key="brand.id"
+            class="brand-item"
+            @click="goToBrand(brand)"
+          >
+            <div class="brand-logo">
+              <img :src="brand.logo" :alt="brand.name" />
+            </div>
+            <div class="brand-name">{{ brand.name }}</div>
+            <div class="brand-count">{{ brand.productCount }}+件商品</div>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -193,6 +259,33 @@ onMounted(() => {
             <div class="category-name">{{ category.name }}</div>
             <div class="category-count">{{ category.count }}+件商品</div>
           </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 秒杀专区 -->
+    <section v-if="homeFlashPromotion && homeFlashPromotion.productList && homeFlashPromotion.productList.length > 0" class="product-section flash-section">
+      <div class="container">
+        <div class="section-header">
+          <div class="flash-header-left">
+            <h2>⚡ 秒杀专区</h2>
+            <p>限时抢购，手慢无</p>
+          </div>
+          <div class="flash-countdown">
+            <span class="countdown-label">本场结束剩余：</span>
+            <span class="countdown-time">{{ formatTime(flashCountdown.hours) }}</span>
+            <span class="countdown-separator">:</span>
+            <span class="countdown-time">{{ formatTime(flashCountdown.minutes) }}</span>
+            <span class="countdown-separator">:</span>
+            <span class="countdown-time">{{ formatTime(flashCountdown.seconds) }}</span>
+          </div>
+        </div>
+        <div class="product-grid">
+          <ProductCard
+            v-for="product in homeFlashPromotion.productList.slice(0, 8)"
+            :key="product.id"
+            :product="product"
+          />
         </div>
       </div>
     </section>
