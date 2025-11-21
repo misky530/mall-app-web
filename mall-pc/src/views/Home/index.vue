@@ -414,37 +414,111 @@ onMounted(() => {
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
+  }
+}
 
-    &::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0, 0, 0, 0.3);
-    }
+// 品牌区域（顶部）
+.brand-section-top {
+  padding: 60px 0;
+  background: white;
+  margin-top: 20px;
 
-    .banner-content {
-      position: relative;
-      z-index: 1;
+  .brand-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 20px;
+    margin-top: 40px;
+
+    .brand-item {
       text-align: center;
-      color: white;
+      padding: 20px;
+      background: #f8f9fa;
+      border-radius: $border-radius-base;
+      cursor: pointer;
+      transition: all 0.3s;
 
+      &:hover {
+        background: white;
+        transform: translateY(-4px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+      }
+
+      .brand-logo {
+        width: 100%;
+        height: 80px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 12px;
+
+        img {
+          max-width: 100%;
+          max-height: 100%;
+          object-fit: contain;
+        }
+      }
+
+      .brand-name {
+        font-size: 16px;
+        font-weight: 500;
+        color: $text-primary;
+        margin-bottom: 8px;
+      }
+
+      .brand-count {
+        font-size: 12px;
+        color: $text-secondary;
+      }
+    }
+  }
+}
+
+// 秒杀区域
+.flash-section {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ff8e53 100%);
+
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .flash-header-left {
       h2 {
-        font-size: 48px;
-        font-weight: bold;
-        margin-bottom: 16px;
-        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        color: white;
       }
 
       p {
-        font-size: 24px;
-        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        color: rgba(255, 255, 255, 0.9);
+      }
+    }
+
+    .flash-countdown {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      .countdown-label {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 14px;
+      }
+
+      .countdown-time {
+        display: inline-block;
+        min-width: 40px;
+        height: 36px;
+        line-height: 36px;
+        text-align: center;
+        background: rgba(0, 0, 0, 0.3);
+        color: white;
+        border-radius: 4px;
+        font-size: 18px;
+        font-weight: bold;
+      }
+
+      .countdown-separator {
+        color: white;
+        font-size: 18px;
+        font-weight: bold;
       }
     }
   }
