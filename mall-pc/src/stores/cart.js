@@ -2,10 +2,14 @@ import { defineStore } from 'pinia'
 import * as cartApi from '@/api/cart'
 import { ElMessage } from 'element-plus'
 
+const CART_STORAGE_KEY = 'mall_cart_list'
+const CART_SELECTED_KEY = 'mall_cart_selected'
+
 export const useCartStore = defineStore('cart', {
   state: () => ({
     cartList: [],
-    selectedIds: [] // 选中的购物车商品ID
+    selectedIds: [], // 选中的购物车商品ID
+    useLocalStorage: true // 使用本地存储模式（因为在线API需要认证）
   }),
 
   getters: {
@@ -35,87 +39,99 @@ export const useCartStore = defineStore('cart', {
   },
 
   actions: {
-    // 从服务器获取购物车列表
+    // 从本地存储加载购物车
+    loadFromLocalStorage() {
+      try {
+        const cartData = localStorage.getItem(CART_STORAGE_KEY)
+        const selectedData = localStorage.getItem(CART_SELECTED_KEY)
+
+        if (cartData) {
+          this.cartList = JSON.parse(cartData)
+        } else {
+          this.cartList = []
+        }
+
+        if (selectedData) {
+          this.selectedIds = JSON.parse(selectedData)
+        } else {
+          // 默认全选
+          this.selectedIds = this.cartList.map(item => item.id)
+        }
+      } catch (error) {
+        console.error('从本地存储加载购物车失败', error)
+        this.cartList = []
+        this.selectedIds = []
+      }
+    },
+
+    // 保存到本地存储
+    saveToLocalStorage() {
+      try {
+        localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(this.cartList))
+        localStorage.setItem(CART_SELECTED_KEY, JSON.stringify(this.selectedIds))
+      } catch (error) {
+        console.error('保存购物车到本地存储失败', error)
+      }
+    },
+
+    // 获取购物车列表
     async fetchCart() {
+      // 在线API需要认证，使用本地存储模式
+      if (this.useLocalStorage) {
+        this.loadFromLocalStorage()
+        return
+      }
+
+      // 以下为API模式（保留以便后续支持认证）
       try {
         const res = await cartApi.getCartList()
         if (res && res.code === 200 && res.data) {
           this.cartList = res.data || []
           // 默认全选
           this.selectedIds = this.cartList.map((item) => item.id)
-        } else {
-          // API 返回但无数据，使用 Mock 数据
-          console.warn('购物车 API 返回数据为空，使用 Mock 数据')
-          this.generateMockCart()
+          this.saveToLocalStorage()
         }
       } catch (error) {
-        console.error('获取购物车列表失败，使用 Mock 数据', error)
-        this.generateMockCart()
+        console.error('获取购物车列表失败，使用本地存储', error)
+        this.useLocalStorage = true
+        this.loadFromLocalStorage()
       }
-    },
-
-    // 生成 Mock 购物车数据
-    generateMockCart() {
-      const mockItems = [
-        {
-          id: 1001,
-          productId: 1,
-          productName: '时尚男士T恤 夏季新款',
-          productPic: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=300&h=300&fit=crop',
-          price: 129.00,
-          quantity: 2,
-          productSku: '颜色:白色 尺码:L'
-        },
-        {
-          id: 1002,
-          productId: 2,
-          productName: '无线蓝牙耳机 降噪版',
-          productPic: 'https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=300&h=300&fit=crop',
-          price: 299.00,
-          quantity: 1,
-          productSku: '颜色:黑色'
-        },
-        {
-          id: 1003,
-          productId: 3,
-          productName: '智能手环 运动手表',
-          productPic: 'https://images.unsplash.com/photo-1575311373937-040b8e1fd5b6?w=300&h=300&fit=crop',
-          price: 199.00,
-          quantity: 1,
-          productSku: '颜色:蓝色'
-        }
-      ]
-      this.cartList = mockItems
-      this.selectedIds = mockItems.map(item => item.id)
     },
 
     // 添加商品到购物车
     async addItem(productData) {
+      // 使用本地存储模式
+      if (this.useLocalStorage) {
+        this.addItemLocally(productData)
+        return
+      }
+
+      // API模式（保留）
       try {
         const res = await cartApi.addToCart(productData)
         if (res && res.code === 200) {
           ElMessage.success('已加入购物车')
-          // 重新获取列表以保证数据同步
           await this.fetchCart()
-        } else {
-          // API 失败，使用本地添加
-          this.addItemLocally(productData)
         }
       } catch (error) {
         console.error('添加购物车失败，使用本地模式', error)
-        // API 失败，使用本地添加
+        this.useLocalStorage = true
         this.addItemLocally(productData)
       }
     },
 
-    // 本地添加商品（API 失败时使用）
+    // 本地添加商品
     addItemLocally(productData) {
-      const existItem = this.cartList.find(item => item.productId === productData.productId)
+      const existItem = this.cartList.find(item =>
+        item.productId === productData.productId &&
+        item.productSku === productData.productSku
+      )
+
       if (existItem) {
         existItem.quantity += productData.quantity || 1
       } else {
         this.cartList.push({
-          id: Date.now(),
+          id: Date.now() + Math.random(), // 确保唯一ID
           productId: productData.productId,
           productName: productData.productName || '商品',
           productPic: productData.productPic || '',
@@ -123,29 +139,65 @@ export const useCartStore = defineStore('cart', {
           quantity: productData.quantity || 1,
           productSku: productData.productSku || ''
         })
+        // 新添加的商品默认选中
+        this.selectedIds.push(this.cartList[this.cartList.length - 1].id)
       }
+
+      this.saveToLocalStorage()
       ElMessage.success('已加入购物车')
     },
 
     // 更新商品数量
     async updateItemQuantity(id, quantity) {
+      // 使用本地存储模式
+      if (this.useLocalStorage) {
+        const item = this.cartList.find((item) => item.id === id)
+        if (item) {
+          item.quantity = quantity
+          this.saveToLocalStorage()
+        }
+        return
+      }
+
+      // API模式（保留）
       try {
         const res = await cartApi.updateCartItemQuantity({ cartId: id, quantity })
         if (res.code === 200) {
           const item = this.cartList.find((item) => item.id === id)
           if (item) {
             item.quantity = quantity
+            this.saveToLocalStorage()
           }
         }
       } catch (error) {
         console.error('更新数量失败', error)
-        // 失败时刷新列表以恢复
-        await this.fetchCart()
+        this.useLocalStorage = true
+        const item = this.cartList.find((item) => item.id === id)
+        if (item) {
+          item.quantity = quantity
+          this.saveToLocalStorage()
+        }
       }
     },
 
     // 删除购物车商品
     async removeItem(id) {
+      // 使用本地存储模式
+      if (this.useLocalStorage) {
+        const index = this.cartList.findIndex((item) => item.id === id)
+        if (index > -1) {
+          this.cartList.splice(index, 1)
+        }
+        const selectedIndex = this.selectedIds.indexOf(id)
+        if (selectedIndex > -1) {
+          this.selectedIds.splice(selectedIndex, 1)
+        }
+        this.saveToLocalStorage()
+        ElMessage.success('删除成功')
+        return
+      }
+
+      // API模式（保留）
       try {
         const res = await cartApi.removeCartItems({ cartIds: [id] })
         if (res.code === 200) {
@@ -157,6 +209,7 @@ export const useCartStore = defineStore('cart', {
           if (selectedIndex > -1) {
             this.selectedIds.splice(selectedIndex, 1)
           }
+          this.saveToLocalStorage()
           ElMessage.success('删除成功')
         }
       } catch (error) {
@@ -164,9 +217,47 @@ export const useCartStore = defineStore('cart', {
       }
     },
 
+    // 批量删除购物车商品（用于清空购物车）
+    async removeCartItems(params) {
+      // 使用本地存储模式
+      if (this.useLocalStorage) {
+        const idsToRemove = params.cartIds || []
+        this.cartList = this.cartList.filter(item => !idsToRemove.includes(item.id))
+        this.selectedIds = this.selectedIds.filter(id => !idsToRemove.includes(id))
+        this.saveToLocalStorage()
+        return Promise.resolve({ code: 200 })
+      }
+
+      // API模式（保留）
+      try {
+        const res = await cartApi.removeCartItems(params)
+        if (res.code === 200) {
+          this.saveToLocalStorage()
+        }
+        return res
+      } catch (error) {
+        console.error('批量删除失败', error)
+        return Promise.reject(error)
+      }
+    },
+
     // 删除选中商品
     async removeSelectedItems() {
-      if (this.selectedIds.length === 0) return
+      if (this.selectedIds.length === 0) {
+        ElMessage.warning('请选择要删除的商品')
+        return
+      }
+
+      // 使用本地存储模式
+      if (this.useLocalStorage) {
+        this.cartList = this.cartList.filter(item => !this.selectedIds.includes(item.id))
+        this.selectedIds = []
+        this.saveToLocalStorage()
+        ElMessage.success('已删除选中商品')
+        return
+      }
+
+      // API模式（保留）
       try {
         const res = await cartApi.removeCartItems({ cartIds: this.selectedIds })
         if (res.code === 200) {
@@ -186,24 +277,24 @@ export const useCartStore = defineStore('cart', {
       } else {
         this.selectedIds.push(id)
       }
+      this.saveToLocalStorage()
     },
 
     // 全选/取消全选
-    async toggleSelectAll() {
-      const checked = !this.isAllSelected
-      try {
-        const res = await cartApi.checkAllCartItems({ checked })
-        if (res.code === 200) {
-          if (checked) {
-            this.selectedIds = this.cartList.map((item) => item.id)
-          } else {
-            this.selectedIds = []
-          }
-        }
-      } catch (error) {
-        console.error('全选/取消全选失败', error)
+    toggleSelectAll() {
+      if (this.isAllSelected) {
+        this.selectedIds = []
+      } else {
+        this.selectedIds = this.cartList.map((item) => item.id)
       }
+      this.saveToLocalStorage()
     },
 
+    // 清空购物车
+    clearCart() {
+      this.cartList = []
+      this.selectedIds = []
+      this.saveToLocalStorage()
+    }
   }
 })
