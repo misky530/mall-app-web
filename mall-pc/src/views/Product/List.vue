@@ -159,19 +159,26 @@ const handlePageChange = (page) => {
 watch(
   () => route.query,
   (newQuery) => {
-    if (newQuery.keyword) {
+    // 处理关键词搜索
+    if (newQuery.keyword !== undefined) {
       filters.value.keyword = newQuery.keyword
-      fetchProductList()
     }
+    // 处理分类ID（兼容 categoryId 和 cateId）
+    if (newQuery.categoryId !== undefined) {
+      filters.value.categoryId = Number(newQuery.categoryId) || null
+    } else if (newQuery.cateId !== undefined) {
+      filters.value.categoryId = Number(newQuery.cateId) || null
+    }
+    // 重置分页并获取数据
+    pagination.value.pageNum = 1
+    fetchProductList()
   },
   { immediate: true }
 )
 
 onMounted(() => {
-  // 如果路由没有关键词，也获取商品列表
-  if (!route.query.keyword) {
-    fetchProductList()
-  }
+  // 组件挂载时获取商品列表（watch 已经设置了 immediate: true，所以这里可以省略）
+  // fetchProductList()
 })
 </script>
 
