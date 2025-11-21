@@ -76,17 +76,15 @@ const fetchProductDetail = async () => {
   try {
     const res = await productApi.fetchProductDetail(route.params.id)
     if (res && res.data) {
-      productDetail.value = res.data
+      // API 返回的数据结构是 {product, brand, productAttributeList, ...}
+      // 需要提取 product 字段
+      productDetail.value = res.data.product || res.data
     } else {
-      // API 返回但无数据，使用 Mock 数据
-      console.warn('API 返回数据为空，使用 Mock 数据')
-      productDetail.value = generateMockProductDetail()
+      ElMessage.error('商品不存在或已下架')
     }
   } catch (error) {
     console.error('获取商品详情失败：', error)
-    ElMessage.warning('使用示例数据展示')
-    // API 调用失败，使用 Mock 数据
-    productDetail.value = generateMockProductDetail()
+    ElMessage.error('获取商品详情失败')
   } finally {
     loading.value = false
   }
