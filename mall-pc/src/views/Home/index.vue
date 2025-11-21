@@ -89,33 +89,31 @@ const fetchHomeData = async () => {
     try {
       const recommendRes = await homeApi.fetchRecommendProductList({ pageNum: 1, pageSize: 8 })
       if (recommendRes && recommendRes.data) {
-        recommendList.value = recommendRes.data.list || []
+        // API 直接返回数组，不是嵌套在 list 中
+        recommendList.value = Array.isArray(recommendRes.data) ? recommendRes.data : []
       }
     } catch (error) {
-      console.warn('推荐商品API失败，使用Mock数据')
-      recommendList.value = generateMockProducts(8, '推荐')
+      console.warn('推荐商品API失败', error)
     }
 
     // 获取新品
     try {
       const newRes = await homeApi.fetchNewProductList({ pageNum: 1, pageSize: 8 })
       if (newRes && newRes.data) {
-        newProductList.value = newRes.data.list || []
+        newProductList.value = Array.isArray(newRes.data) ? newRes.data : []
       }
     } catch (error) {
-      console.warn('新品API失败，使用Mock数据')
-      newProductList.value = generateMockProducts(8, '新品')
+      console.warn('新品API失败', error)
     }
 
     // 获取热销商品
     try {
       const hotRes = await homeApi.fetchHotProductList({ pageNum: 1, pageSize: 8 })
       if (hotRes && hotRes.data) {
-        hotProductList.value = hotRes.data.list || []
+        hotProductList.value = Array.isArray(hotRes.data) ? hotRes.data : []
       }
     } catch (error) {
-      console.warn('热销商品API失败，使用Mock数据')
-      hotProductList.value = generateMockProducts(8, '热销')
+      console.warn('热销商品API失败', error)
     }
 
     // 获取分类
