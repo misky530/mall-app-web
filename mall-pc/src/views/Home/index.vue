@@ -31,17 +31,23 @@ const bannerList = ref([
   }
 ])
 
-// 分类数据
-const categoryList = ref([
-  { id: 1, name: '服饰', icon: '👔', count: 1280 },
-  { id: 2, name: '数码', icon: '📱', count: 856 },
-  { id: 3, name: '家居', icon: '🏠', count: 642 },
-  { id: 4, name: '美妆', icon: '💄', count: 923 },
-  { id: 5, name: '食品', icon: '🍎', count: 538 },
-  { id: 6, name: '运动', icon: '⚽', count: 445 },
-  { id: 7, name: '图书', icon: '📚', count: 782 },
-  { id: 8, name: '母婴', icon: '🍼', count: 367 }
-])
+// 分类数据（将从 API 获取）
+const categoryList = ref([])
+
+// 分类图标映射
+const categoryIcons = {
+  '服装': '👔',
+  '手机数码': '📱',
+  '家用电器': '🏠',
+  '家具家装': '🛋️',
+  '汽车用品': '🚗',
+  '电脑办公': '💻',
+  '美妆': '💄',
+  '食品': '🍎',
+  '运动': '⚽',
+  '图书': '📚',
+  '母婴': '🍼'
+}
 
 // 推荐商品
 const recommendList = ref([])
@@ -116,10 +122,17 @@ const fetchHomeData = async () => {
     try {
       const categoryRes = await homeApi.fetchProductCateList(0)
       if (categoryRes && categoryRes.data && categoryRes.data.length > 0) {
+        // 添加图标到分类数据
+        const categoriesWithIcon = categoryRes.data.map(cat => ({
+          ...cat,
+          icon: categoryIcons[cat.name] || '📦',
+          count: cat.productCount || 0
+        }))
+        categoryList.value = categoriesWithIcon
         productStore.setCategoryList(categoryRes.data)
       }
     } catch (error) {
-      console.warn('分类API失败')
+      console.warn('分类API失败', error)
     }
   } catch (error) {
     console.error('获取首页数据失败：', error)

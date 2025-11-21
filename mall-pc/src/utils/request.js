@@ -14,12 +14,12 @@ const request = axios.create({
 // 请求拦截器
 request.interceptors.request.use(
   (config) => {
-    // 添加token
-    const token = localStorage.getItem('token')
-    const tokenHead = localStorage.getItem('tokenHead') || 'Bearer '
-    if (token) {
-      config.headers.Authorization = `${tokenHead}${token}`
-    }
+    // 线上 API 不需要 token，但保留代码以便后续本地开发使用
+    // const token = localStorage.getItem('token')
+    // const tokenHead = localStorage.getItem('tokenHead') || 'Bearer '
+    // if (token) {
+    //   config.headers.Authorization = `${tokenHead}${token}`
+    // }
     return config
   },
   (error) => {
