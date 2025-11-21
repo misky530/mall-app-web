@@ -91,6 +91,17 @@ const generateMockProducts = () => {
   return mockProducts
 }
 
+// 排序类型映射（转换为 API 需要的数字格式）
+const getSortValue = (sortType) => {
+  const sortMap = {
+    'default': 0,      // 默认排序
+    'sale': 1,         // 销量优先
+    'price_asc': 2,    // 价格从低到高
+    'price_desc': 3    // 价格从高到低
+  }
+  return sortMap[sortType] || 0
+}
+
 // 获取商品列表
 const fetchProductList = async () => {
   loading.value = true
@@ -98,11 +109,19 @@ const fetchProductList = async () => {
     const params = {
       pageNum: pagination.value.pageNum,
       pageSize: pagination.value.pageSize,
-      keyword: filters.value.keyword,
-      cateId: filters.value.categoryId,
-      minPrice: filters.value.minPrice,
-      maxPrice: filters.value.maxPrice,
-      sort: filters.value.sortType
+      keyword: filters.value.keyword || '',
+      sort: getSortValue(filters.value.sortType)
+    }
+
+    // 只在有值时添加分类ID和价格区间参数
+    if (filters.value.categoryId !== null && filters.value.categoryId !== undefined) {
+      params.cateId = filters.value.categoryId
+    }
+    if (filters.value.minPrice !== null && filters.value.minPrice !== undefined) {
+      params.minPrice = filters.value.minPrice
+    }
+    if (filters.value.maxPrice !== null && filters.value.maxPrice !== undefined) {
+      params.maxPrice = filters.value.maxPrice
     }
 
     const res = await productApi.searchProductList(params)
