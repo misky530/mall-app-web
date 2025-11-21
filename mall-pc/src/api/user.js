@@ -1,6 +1,17 @@
 import request from '@/utils/request'
 
 /**
+ * 管理员登录
+ */
+export function adminLogin(data) {
+  return request({
+    method: 'POST',
+    url: '/admin/login',
+    data
+  })
+}
+
+/**
  * 用户登录
  */
 export function memberLogin(data) {

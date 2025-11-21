@@ -115,7 +115,7 @@ export default [
   {
     path: '/login',
     name: 'Login',
-    component: () => import('@/views/Auth/Login.vue'),
+    component: () => import('@/views/Login.vue'),
     meta: {
       title: '登录'
     }
