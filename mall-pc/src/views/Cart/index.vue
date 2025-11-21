@@ -9,7 +9,7 @@
       </template>
       <div v-if="cartStore.cartList.length === 0" class="empty-cart">
         <el-empty description="购物车空空如也，快去购物吧！" />
-        <el-button type="primary" @click="$router.push({ name: 'Home' })">去购物</el-button>
+        <el-button type="primary" @click="$router.push({ path: '/' })">去购物</el-button>
       </div>
       <div v-else>
         <el-table :data="cartStore.cartList" style="width: 100%" @selection-change="handleSelectionChange">
@@ -17,10 +17,26 @@
           <el-table-column label="商品" width="400">
             <template #default="scope">
               <div class="product-info">
-                <el-image :src="scope.row.productPic" fit="cover" class="product-pic" />
+                <div class="product-pic-wrapper" @click="goToProductDetail(scope.row.productId)">
+                  <el-image
+                    :src="scope.row.productPic || scope.row.pic"
+                    fit="cover"
+                    class="product-pic"
+                    @error="handleImageError"
+                  >
+                    <template #error>
+                      <div class="image-error">
+                        <div style="font-size: 32px; margin-bottom: 4px;">📦</div>
+                        <div style="font-size: 12px;">暂无图片</div>
+                      </div>
+                    </template>
+                  </el-image>
+                </div>
                 <div class="product-detail">
-                  <div class="product-name">{{ scope.row.productName }}</div>
-                  <div class="product-sku">{{ scope.row.productSku }}</div>
+                  <div class="product-name" @click="goToProductDetail(scope.row.productId)">
+                    {{ scope.row.productName || scope.row.name }}
+                  </div>
+                  <div class="product-sku" v-if="scope.row.productSku">{{ scope.row.productSku }}</div>
                 </div>
               </div>
             </template>
@@ -126,7 +142,17 @@ const goToCheckout = () => {
     ElMessage.warning('请选择要结算的商品')
     return
   }
-  router.push({ name: 'OrderConfirm' })
+  router.push({ path: '/order/confirm' })
+}
+
+// 图片加载错误处理
+const handleImageError = (e) => {
+  console.log('图片加载失败')
+}
+
+// 跳转到商品详情
+const goToProductDetail = (productId) => {
+  router.push(`/product/detail/${productId}`)
 }
 </script>
 
@@ -154,11 +180,33 @@ const goToCheckout = () => {
     display: flex;
     align-items: center;
 
-    .product-pic {
-      width: 80px;
-      height: 80px;
+    .product-pic-wrapper {
       margin-right: 15px;
-      border-radius: 4px;
+      cursor: pointer;
+
+      .product-pic {
+        width: 80px;
+        height: 80px;
+        border-radius: 4px;
+        border: 1px solid #eee;
+        transition: transform 0.3s;
+
+        &:hover {
+          transform: scale(1.05);
+        }
+      }
+
+      .image-error {
+        width: 80px;
+        height: 80px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: #f5f5f5;
+        color: #999;
+        border-radius: 4px;
+      }
     }
 
     .product-detail {
@@ -170,6 +218,12 @@ const goToCheckout = () => {
         font-size: 16px;
         color: #333;
         margin-bottom: 5px;
+        cursor: pointer;
+        transition: color 0.3s;
+
+        &:hover {
+          color: #409eff;
+        }
       }
 
       .product-sku {

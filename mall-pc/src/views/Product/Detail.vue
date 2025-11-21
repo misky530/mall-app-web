@@ -115,18 +115,19 @@ const handleIncrease = () => {
 }
 
 // 加入购物车
-const handleAddToCart = () => {
+const handleAddToCart = async () => {
   if (!productDetail.value) return
 
-  cartStore.addToCart({
-    id: Date.now(),
+  await cartStore.addItem({
     productId: productDetail.value.id,
-    name: productDetail.value.name,
-    pic: productDetail.value.pic,
+    skuId: productDetail.value.skuId || productDetail.value.id,
+    quantity: quantity.value,
+    // 添加更多信息用于本地 Mock 模式
+    productName: productDetail.value.name,
+    productPic: productDetail.value.pic,
     price: productDetail.value.price,
-    quantity: quantity.value
+    productSku: productDetail.value.subTitle || ''
   })
-  ElMessage.success('已加入购物车')
 }
 
 // 立即购买
