@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElUpload } from 'element-plus'
 import { Upload, Document } from '@element-plus/icons-vue'
 import { useCartStore } from '@/stores/cart'
+import { enrichOrderItems } from '@/utils/productApi'
 
 const route = useRoute()
 const router = useRouter()
@@ -87,6 +88,9 @@ const handleSubmitVoucher = async () => {
   uploading.value = true
 
   try {
+    // 从API获取完整的商品信息
+    const enrichedItems = await enrichOrderItems(orderInfo.value.items)
+
     // 模拟提交过程
     await new Promise(resolve => setTimeout(resolve, 1500))
 
@@ -110,10 +114,7 @@ const handleSubmitVoucher = async () => {
       receiverCity: '深圳市',
       receiverRegion: '南山区',
       receiverDetailAddress: '科技园南区XX路XX号',
-      items: orderInfo.value.items.map(item => ({
-        ...item,
-        productPic: item.productPic || item.pic
-      }))
+      items: enrichedItems
     }
 
     // 存储订单数据

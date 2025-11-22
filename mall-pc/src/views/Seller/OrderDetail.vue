@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Ship, Document, View } from '@element-plus/icons-vue'
+import { enrichOrder } from '@/utils/productApi'
 
 const route = useRoute()
 const router = useRouter()
@@ -26,11 +27,13 @@ const showShipDialog = ref(false)
 const submitting = ref(false)
 
 // 获取订单详情
-const fetchOrderDetail = () => {
+const fetchOrderDetail = async () => {
   try {
     const savedOrder = localStorage.getItem(`order_${orderId.value}`)
     if (savedOrder) {
-      orderDetail.value = JSON.parse(savedOrder)
+      const order = JSON.parse(savedOrder)
+      // 获取完整商品信息
+      orderDetail.value = await enrichOrder(order)
     } else {
       ElMessage.error('订单不存在')
       router.back()

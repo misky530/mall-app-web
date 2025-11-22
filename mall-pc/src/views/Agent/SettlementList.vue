@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { Money, Search } from '@element-plus/icons-vue'
+import { enrichOrder } from '@/utils/productApi'
 
 const router = useRouter()
 
@@ -20,7 +21,7 @@ const stats = ref({
 })
 
 // 获取待结算订单列表
-const fetchSettlementOrders = () => {
+const fetchSettlementOrders = async () => {
   loading.value = true
   try {
     const orders = []
@@ -41,14 +42,19 @@ const fetchSettlementOrders = () => {
       }
     }
 
-    settlementList.value = orders.sort((a, b) => {
+    // 为所有订单获取完整商品信息
+    const enrichedOrders = await Promise.all(
+      orders.map(order => enrichOrder(order))
+    )
+
+    settlementList.value = enrichedOrders.sort((a, b) => {
       const timeA = new Date(a.acceptanceTime || a.verifyTime).getTime()
       const timeB = new Date(b.acceptanceTime || b.verifyTime).getTime()
       return timeB - timeA
     })
 
     stats.value = {
-      totalCount: orders.length,
+      totalCount: enrichedOrders.length,
       totalAmount: totalAmount
     }
   } catch (error) {

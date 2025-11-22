@@ -3,6 +3,7 @@ import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { Search, Ship } from '@element-plus/icons-vue'
+import { enrichOrder } from '@/utils/productApi'
 
 const router = useRouter()
 
@@ -17,7 +18,7 @@ const searchKeyword = ref('')
 const activeTab = ref('pending-ship')
 
 // 获取订单列表
-const fetchOrders = () => {
+const fetchOrders = async () => {
   loading.value = true
   try {
     const orders = []
@@ -39,8 +40,13 @@ const fetchOrders = () => {
       }
     }
 
+    // 为所有订单获取完整商品信息
+    const enrichedOrders = await Promise.all(
+      orders.map(order => enrichOrder(order))
+    )
+
     // 按创建时间降序排序
-    orderList.value = orders.sort((a, b) => {
+    orderList.value = enrichedOrders.sort((a, b) => {
       const timeA = new Date(a.createTime).getTime()
       const timeB = new Date(b.createTime).getTime()
       return timeB - timeA

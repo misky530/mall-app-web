@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { View, Check, Close } from '@element-plus/icons-vue'
+import { enrichOrder } from '@/utils/productApi'
 
 const router = useRouter()
 
@@ -11,7 +12,7 @@ const arbitrationList = ref([])
 const loading = ref(false)
 
 // 获取待仲裁订单列表
-const fetchArbitrationOrders = () => {
+const fetchArbitrationOrders = async () => {
   loading.value = true
   try {
     const orders = []
@@ -29,7 +30,12 @@ const fetchArbitrationOrders = () => {
       }
     }
 
-    arbitrationList.value = orders.sort((a, b) => {
+    // 为所有订单获取完整商品信息
+    const enrichedOrders = await Promise.all(
+      orders.map(order => enrichOrder(order))
+    )
+
+    arbitrationList.value = enrichedOrders.sort((a, b) => {
       const timeA = new Date(a.acceptanceTime).getTime()
       const timeB = new Date(b.acceptanceTime).getTime()
       return timeB - timeA

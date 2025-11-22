@@ -3,6 +3,7 @@ import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { View, Search } from '@element-plus/icons-vue'
+import { enrichOrder } from '@/utils/productApi'
 
 const router = useRouter()
 
@@ -14,7 +15,7 @@ const loading = ref(false)
 const searchKeyword = ref('')
 
 // 获取待确认收款订单列表
-const fetchPendingOrders = () => {
+const fetchPendingOrders = async () => {
   loading.value = true
   try {
     // 从localStorage中读取所有订单，筛选出状态为"待确认收款"的订单
@@ -40,8 +41,13 @@ const fetchPendingOrders = () => {
 
     console.log('Pending orders count:', orders.length)
 
+    // 为所有订单获取完整商品信息
+    const enrichedOrders = await Promise.all(
+      orders.map(order => enrichOrder(order))
+    )
+
     // 按提交时间降序排序
-    orderList.value = orders.sort((a, b) => {
+    orderList.value = enrichedOrders.sort((a, b) => {
       const timeA = new Date(a.submitVoucherTime || a.createTime).getTime()
       const timeB = new Date(b.submitVoucherTime || b.createTime).getTime()
       return timeB - timeA
