@@ -4,6 +4,7 @@ import { useRoute } from 'vue-router'
 import { Grid, List as ListIcon } from '@element-plus/icons-vue'
 import ProductCard from '@/components/Product/ProductCard.vue'
 import * as productApi from '@/api/product'
+import * as homeApi from '@/api/home'
 
 const route = useRoute()
 
@@ -68,6 +69,21 @@ const selectedPriceRange = computed(() => {
   ) || priceRanges[0]
 })
 
+// 页面标题
+const pageTitle = computed(() => {
+  const type = route.query.type
+  if (type === 'new') {
+    return '新品上市'
+  } else if (type === 'hot') {
+    return '热销商品'
+  } else if (route.query.categoryName) {
+    return route.query.categoryName
+  } else if (route.query.keyword) {
+    return `搜索: ${route.query.keyword}`
+  }
+  return '商品列表'
+})
+
 // Mock 商品数据（降级方案）
 const generateMockProducts = () => {
   const mockProducts = []
@@ -106,38 +122,71 @@ const getSortValue = (sortType) => {
 const fetchProductList = async () => {
   loading.value = true
   try {
-    const params = {
-      pageNum: pagination.value.pageNum,
-      pageSize: pagination.value.pageSize,
-      keyword: filters.value.keyword || '',
-      sort: getSortValue(filters.value.sortType)
-    }
+    // 检查是否是特殊类型（新品或热销）
+    const listType = route.query.type
 
-    // 只在有值时添加分类ID和价格区间参数
-    if (filters.value.categoryId !== null && filters.value.categoryId !== undefined) {
-      params.cateId = filters.value.categoryId
-    }
-    if (filters.value.minPrice !== null && filters.value.minPrice !== undefined) {
-      params.minPrice = filters.value.minPrice
-    }
-    if (filters.value.maxPrice !== null && filters.value.maxPrice !== undefined) {
-      params.maxPrice = filters.value.maxPrice
-    }
-
-    const res = await productApi.searchProductList(params)
-    if (res && res.data) {
-      productList.value = res.data.list || []
-      pagination.value.total = res.data.total || 0
+    if (listType === 'new') {
+      // 获取新品列表
+      const params = {
+        pageNum: pagination.value.pageNum,
+        pageSize: pagination.value.pageSize
+      }
+      const res = await homeApi.fetchNewProductList(params)
+      if (res && res.data) {
+        productList.value = Array.isArray(res.data) ? res.data : []
+        pagination.value.total = productList.value.length
+      } else {
+        productList.value = generateMockProducts()
+        pagination.value.total = 48
+      }
+    } else if (listType === 'hot') {
+      // 获取热销商品列表
+      const params = {
+        pageNum: pagination.value.pageNum,
+        pageSize: pagination.value.pageSize
+      }
+      const res = await homeApi.fetchHotProductList(params)
+      if (res && res.data) {
+        productList.value = Array.isArray(res.data) ? res.data : []
+        pagination.value.total = productList.value.length
+      } else {
+        productList.value = generateMockProducts()
+        pagination.value.total = 48
+      }
     } else {
-      // API 返回但无数据，使用 Mock 数据
-      console.warn('API 返回数据为空，使用 Mock 数据')
-      productList.value = generateMockProducts()
-      pagination.value.total = 48
+      // 常规搜索和筛选
+      const params = {
+        pageNum: pagination.value.pageNum,
+        pageSize: pagination.value.pageSize,
+        keyword: filters.value.keyword || '',
+        sort: getSortValue(filters.value.sortType)
+      }
+
+      // 只在有值时添加分类ID和价格区间参数
+      if (filters.value.categoryId !== null && filters.value.categoryId !== undefined) {
+        params.cateId = filters.value.categoryId
+      }
+      if (filters.value.minPrice !== null && filters.value.minPrice !== undefined) {
+        params.minPrice = filters.value.minPrice
+      }
+      if (filters.value.maxPrice !== null && filters.value.maxPrice !== undefined) {
+        params.maxPrice = filters.value.maxPrice
+      }
+
+      const res = await productApi.searchProductList(params)
+      if (res && res.data) {
+        productList.value = res.data.list || []
+        pagination.value.total = res.data.total || 0
+      } else {
+        // API 返回但无数据，使用 Mock 数据
+        console.warn('API 返回数据为空，使用 Mock 数据')
+        productList.value = generateMockProducts()
+        pagination.value.total = 48
+      }
     }
   } catch (error) {
     console.error('获取商品列表失败：', error)
     // API 调用失败，使用 Mock 数据作为降级方案
-    ElMessage.warning('使用示例数据展示')
     productList.value = generateMockProducts()
     pagination.value.total = 48
   } finally {
@@ -207,7 +256,7 @@ onMounted(() => {
       <!-- 面包屑 -->
       <el-breadcrumb separator="/" class="breadcrumb">
         <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
-        <el-breadcrumb-item>商品列表</el-breadcrumb-item>
+        <el-breadcrumb-item>{{ pageTitle }}</el-breadcrumb-item>
       </el-breadcrumb>
 
       <div class="page-content">

@@ -179,9 +179,31 @@ const goToCategory = (category) => {
   })
 }
 
+// 跳转到新品列表
+const goToNewProductList = () => {
+  router.push({
+    path: '/product/list',
+    query: { type: 'new' }
+  })
+}
+
+// 跳转到热销商品列表
+const goToHotProductList = () => {
+  router.push({
+    path: '/product/list',
+    query: { type: 'hot' }
+  })
+}
+
 // 查看更多
 const viewMore = (type) => {
-  console.log('查看更多：', type)
+  if (type === 'new') {
+    goToNewProductList()
+  } else if (type === 'hot') {
+    goToHotProductList()
+  } else {
+    console.log('查看更多：', type)
+  }
 }
 
 // 跳转到品牌详情
@@ -479,11 +501,15 @@ onMounted(() => {
 
     .flash-header-left {
       h2 {
+        font-size: 32px;
+        font-weight: bold;
         color: white !important;
         text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        margin-bottom: 8px;
       }
 
       p {
+        font-size: 14px;
         color: rgba(255, 255, 255, 0.95) !important;
       }
     }
@@ -517,10 +543,15 @@ onMounted(() => {
         font-weight: bold;
       }
     }
+  }
 
-    // 覆盖通用样式，确保秒杀区域的文字是白色
-    h2, p {
-      color: white;
+  // Override general section-header styles for flash section
+  &.product-section .section-header {
+    h2 {
+      color: white !important;
+    }
+    p {
+      color: rgba(255, 255, 255, 0.95) !important;
     }
   }
 }
