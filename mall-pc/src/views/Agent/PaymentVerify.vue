@@ -12,62 +12,56 @@ const orderList = ref([])
 // 加载状态
 const loading = ref(false)
 
-// 获取待确认收款订单列表（Mock）
+// 获取待确认收款订单列表（从localStorage读取）
 const fetchOrderList = async () => {
   loading.value = true
   try {
     await new Promise(resolve => setTimeout(resolve, 500))
 
-    // Mock数据
-    orderList.value = [
-      {
-        id: '1',
-        orderSn: 'ORD20240120001',
-        status: ORDER_STATUS.PAID_PENDING_VERIFY,
-        statusName: getOrderStatusName(ORDER_STATUS.PAID_PENDING_VERIFY),
-        createTime: '2024-01-20 14:30:25',
-        payTime: '2024-01-20 14:32:10',
-        totalAmount: 1000.00,
-        payAmount: 1010.00,
-        buyerName: 'XX公司',
-        paymentVouchers: [
-          'https://via.placeholder.com/300x200?text=付款凭证1',
-          'https://via.placeholder.com/300x200?text=付款凭证2'
-        ],
-        items: [
-          {
-            id: 1,
-            productName: '示例商品A',
-            productPic: 'https://via.placeholder.com/80',
-            price: 1000.00,
-            quantity: 1
+    // 从localStorage读取所有订单
+    const orders = []
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i)
+      if (key && key.startsWith('order_')) {
+        try {
+          const orderData = localStorage.getItem(key)
+          if (orderData) {
+            const order = JSON.parse(orderData)
+            // 只显示待确认收款的订单
+            const orderStatus = order.status
+            if (orderStatus === ORDER_STATUS.PAID_PENDING_VERIFY || orderStatus === 'PAID_PENDING_VERIFY') {
+              // 确保有付款凭证
+              if (order.paymentVouchers && order.paymentVouchers.length > 0) {
+                // 添加买家信息
+                if (!order.buyerName && order.receiverName) {
+                  order.buyerName = order.receiverName + '（买家）'
+                }
+                // 确保商品图片正确
+                if (order.items && order.items.length > 0) {
+                  order.items.forEach(item => {
+                    if (!item.productPic && item.pic) {
+                      item.productPic = item.pic
+                    }
+                  })
+                }
+                orders.push(order)
+              }
+            }
           }
-        ]
-      },
-      {
-        id: '2',
-        orderSn: 'ORD20240119001',
-        status: ORDER_STATUS.PAID_PENDING_VERIFY,
-        statusName: getOrderStatusName(ORDER_STATUS.PAID_PENDING_VERIFY),
-        createTime: '2024-01-19 10:20:15',
-        payTime: '2024-01-19 10:25:30',
-        totalAmount: 2000.00,
-        payAmount: 2010.00,
-        buyerName: 'YY公司',
-        paymentVouchers: [
-          'https://via.placeholder.com/300x200?text=付款凭证'
-        ],
-        items: [
-          {
-            id: 2,
-            productName: '示例商品B',
-            productPic: 'https://via.placeholder.com/80',
-            price: 2000.00,
-            quantity: 1
-          }
-        ]
+        } catch (error) {
+          console.error(`解析订单数据失败: ${key}`, error)
+        }
       }
-    ]
+    }
+
+    // 按创建时间倒序排列
+    orders.sort((a, b) => {
+      const timeA = new Date(a.payTime || a.createTime || 0).getTime()
+      const timeB = new Date(b.payTime || b.createTime || 0).getTime()
+      return timeB - timeA
+    })
+
+    orderList.value = orders
   } catch (error) {
     console.error('获取订单列表失败：', error)
     ElMessage.error('获取订单列表失败')
@@ -95,6 +89,9 @@ const handleConfirmPayment = async (order) => {
         order.status = ORDER_STATUS.PROCESSING
         order.statusName = getOrderStatusName(ORDER_STATUS.PROCESSING)
         order.verifyTime = new Date().toLocaleString('zh-CN')
+
+        // 保存到localStorage，确保卖家能看到
+        localStorage.setItem(`order_${order.id}`, JSON.stringify(order))
 
         ElMessage.success('收款确认成功，已通知卖家发货')
         fetchOrderList()
@@ -130,6 +127,11 @@ const handleRejectPayment = async (order) => {
         order.statusName = getOrderStatusName(ORDER_STATUS.CREATED)
         order.rejectReason = value
         order.rejectTime = new Date().toLocaleString('zh-CN')
+        // 清空付款凭证，让买家重新上传
+        order.paymentVouchers = []
+
+        // 保存到localStorage
+        localStorage.setItem(`order_${order.id}`, JSON.stringify(order))
 
         ElMessage.success('已驳回，买家需重新上传凭证')
         fetchOrderList()
@@ -147,6 +149,12 @@ const handleRejectPayment = async (order) => {
 const handleViewVoucher = (voucher) => {
   // 打开图片预览
   window.open(voucher, '_blank')
+}
+
+// 图片加载错误处理
+const handleImageError = (e) => {
+  e.target.src = 'https://via.placeholder.com/80?text=暂无图片'
+  e.target.onerror = null
 }
 
 onMounted(() => {

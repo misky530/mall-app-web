@@ -22,67 +22,73 @@ const orderList = ref([])
 // 加载状态
 const loading = ref(false)
 
-// 获取订单列表（Mock）
+// 获取订单列表（从localStorage读取买家创建的订单）
 const fetchOrderList = async () => {
   loading.value = true
   try {
     await new Promise(resolve => setTimeout(resolve, 500))
 
-    // Mock数据
-    const mockOrders = [
-      {
-        id: '1',
-        orderSn: 'ORD20240120001',
-        status: ORDER_STATUS.PROCESSING,
-        statusName: getOrderStatusName(ORDER_STATUS.PROCESSING),
-        createTime: '2024-01-20 14:30:25',
-        payTime: '2024-01-20 14:32:10',
-        totalAmount: 1000.00,
-        payAmount: 1010.00,
-        buyerName: 'XX公司',
-        buyerPhone: '13800138000',
-        receiverName: '张三',
-        receiverAddress: '广东省深圳市南山区科技园XX路XX号',
-        items: [
-          {
-            id: 1,
-            productName: '示例商品A',
-            productPic: 'https://via.placeholder.com/80',
-            price: 1000.00,
-            quantity: 1
+    // 从localStorage读取所有订单
+    const orders = []
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i)
+      if (key && key.startsWith('order_')) {
+        try {
+          const orderData = localStorage.getItem(key)
+          if (orderData) {
+            const order = JSON.parse(orderData)
+            // 卖家只能看到已确认收款的订单（待发货、已发货、待结算、已结算）
+            // 注意：这里需要检查订单状态字符串，因为localStorage中存储的是字符串
+            const orderStatus = order.status
+            if (orderStatus && [
+              ORDER_STATUS.PROCESSING,
+              ORDER_STATUS.SHIPPED,
+              ORDER_STATUS.COMPLETED,
+              ORDER_STATUS.SETTLED,
+              'PROCESSING',
+              'SHIPPED',
+              'COMPLETED',
+              'SETTLED'
+            ].includes(orderStatus)) {
+              // 确保订单数据完整
+              if (!order.buyerName && order.receiverName) {
+                order.buyerName = order.receiverName + '（买家）'
+              }
+              if (!order.buyerPhone && order.receiverPhone) {
+                order.buyerPhone = order.receiverPhone
+              }
+              // 确保商品图片正确
+              if (order.items && order.items.length > 0) {
+                order.items.forEach(item => {
+                  if (!item.productPic && (item.pic || item.productPic)) {
+                    item.productPic = item.pic || item.productPic
+                  }
+                })
+              }
+              orders.push(order)
+            }
           }
-        ]
-      },
-      {
-        id: '2',
-        orderSn: 'ORD20240119001',
-        status: ORDER_STATUS.SHIPPED,
-        statusName: getOrderStatusName(ORDER_STATUS.SHIPPED),
-        createTime: '2024-01-19 10:20:15',
-        payTime: '2024-01-19 10:25:30',
-        deliveryTime: '2024-01-19 15:30:00',
-        totalAmount: 2000.00,
-        payAmount: 2010.00,
-        buyerName: 'YY公司',
-        deliveryCompany: '顺丰速运',
-        deliverySn: 'SF1234567890',
-        items: [
-          {
-            id: 2,
-            productName: '示例商品B',
-            productPic: 'https://via.placeholder.com/80',
-            price: 2000.00,
-            quantity: 1
-          }
-        ]
+        } catch (error) {
+          console.error(`解析订单数据失败: ${key}`, error)
+        }
       }
-    ]
+    }
+
+    // 如果没有符合条件的订单，显示提示
+    // 不再使用Mock数据，让用户知道需要先有订单
 
     // 根据状态筛选
-    let filteredOrders = mockOrders
+    let filteredOrders = orders
     if (activeTab.value !== '') {
-      filteredOrders = mockOrders.filter(order => order.status === activeTab.value)
+      filteredOrders = orders.filter(order => order.status === activeTab.value)
     }
+
+    // 按创建时间倒序排列
+    filteredOrders.sort((a, b) => {
+      const timeA = new Date(a.createTime || a.payTime || 0).getTime()
+      const timeB = new Date(b.createTime || b.payTime || 0).getTime()
+      return timeB - timeA
+    })
 
     orderList.value = filteredOrders
   } catch (error) {
@@ -107,6 +113,12 @@ const handleShip = (order) => {
 // 查看详情
 const handleViewDetail = (order) => {
   router.push(`/seller/order/detail/${order.id}`)
+}
+
+// 图片加载错误处理
+const handleImageError = (e) => {
+  e.target.src = 'https://via.placeholder.com/80?text=暂无图片'
+  e.target.onerror = null // 防止循环
 }
 
 // 获取订单操作按钮
@@ -193,7 +205,11 @@ onMounted(() => {
                   class="product-item"
                 >
                   <div class="product-image">
-                    <img :src="item.productPic" :alt="item.productName" />
+                    <img
+                      :src="item.productPic || item.pic || 'https://via.placeholder.com/80'"
+                      :alt="item.productName"
+                      @error="handleImageError"
+                    />
                   </div>
                   <div class="product-info">
                     <div class="product-name">{{ item.productName }}</div>
@@ -211,7 +227,19 @@ onMounted(() => {
                 </div>
                 <div class="detail-row" v-if="order.receiverName">
                   <span class="label">收货人：</span>
-                  <span class="value">{{ order.receiverName }} {{ order.receiverAddress }}</span>
+                  <span class="value">
+                    {{ order.receiverName }}
+                    <span v-if="order.receiverPhone"> {{ order.receiverPhone }}</span>
+                  </span>
+                </div>
+                <div class="detail-row" v-if="order.receiverDetailAddress || order.receiverAddress">
+                  <span class="label">收货地址：</span>
+                  <span class="value">
+                    <span v-if="order.receiverProvince">{{ order.receiverProvince }} </span>
+                    <span v-if="order.receiverCity">{{ order.receiverCity }} </span>
+                    <span v-if="order.receiverRegion">{{ order.receiverRegion }} </span>
+                    {{ order.receiverDetailAddress || order.receiverAddress }}
+                  </span>
                 </div>
                 <div class="detail-row" v-if="order.deliveryCompany">
                   <span class="label">物流：</span>

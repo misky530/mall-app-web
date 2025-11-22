@@ -89,6 +89,10 @@ watch(
           </template>
           <el-divider direction="vertical" />
           <router-link to="/order/list">我的订单</router-link>
+          <el-divider direction="vertical" />
+          <router-link to="/seller/order/list">卖家中心</router-link>
+          <el-divider direction="vertical" />
+          <router-link to="/agent/payment/verify">经办人</router-link>
         </div>
       </div>
     </div>

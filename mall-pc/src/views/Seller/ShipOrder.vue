@@ -36,33 +36,27 @@ const deliveryCompanies = [
 // 提交中
 const submitting = ref(false)
 
-// 获取订单详情（Mock）
+// 获取订单详情（从localStorage读取）
 const fetchOrderDetail = async () => {
   loading.value = true
   try {
     await new Promise(resolve => setTimeout(resolve, 500))
 
-    // Mock数据
-    orderDetail.value = {
-      id: orderId,
-      orderSn: `ORD${orderId}`,
-      status: ORDER_STATUS.PROCESSING,
-      statusName: getOrderStatusName(ORDER_STATUS.PROCESSING),
-      totalAmount: 1000.00,
-      payAmount: 1010.00,
-      buyerName: 'XX公司',
-      receiverName: '张三',
-      receiverPhone: '13800138000',
-      receiverAddress: '广东省深圳市南山区科技园XX路XX号',
-      items: [
-        {
-          id: 1,
-          productName: '示例商品',
-          productPic: 'https://via.placeholder.com/80',
-          price: 1000.00,
-          quantity: 1
-        }
-      ]
+    // 从localStorage读取订单数据
+    const savedOrder = localStorage.getItem(`order_${orderId}`)
+    if (savedOrder) {
+      const order = JSON.parse(savedOrder)
+      // 检查订单状态，只有待发货的订单才能发货
+      const orderStatus = order.status
+      if (orderStatus !== ORDER_STATUS.PROCESSING && orderStatus !== 'PROCESSING') {
+        ElMessage.warning('该订单不是待发货状态，无法发货')
+        router.push('/seller/order/list')
+        return
+      }
+      orderDetail.value = order
+    } else {
+      ElMessage.warning('订单不存在')
+      router.push('/seller/order/list')
     }
   } catch (error) {
     console.error('获取订单详情失败：', error)
@@ -105,6 +99,8 @@ const handleSubmitShip = async () => {
 
           // 保存到localStorage（实际应该调用API）
           localStorage.setItem(`order_${orderId}`, JSON.stringify(orderDetail.value))
+          
+          console.log('订单已发货，状态已更新:', orderDetail.value.status)
         }
 
         ElMessage.success('发货成功')
@@ -119,6 +115,12 @@ const handleSubmitShip = async () => {
     .catch(() => {
       // 取消
     })
+}
+
+// 图片加载错误处理
+const handleImageError = (e) => {
+  e.target.src = 'https://via.placeholder.com/100?text=暂无图片'
+  e.target.onerror = null
 }
 
 onMounted(() => {
@@ -157,7 +159,12 @@ onMounted(() => {
               </div>
               <div class="info-row">
                 <span class="label">收货地址：</span>
-                <span class="value">{{ orderDetail.receiverAddress }}</span>
+                <span class="value">
+                  <span v-if="orderDetail.receiverProvince">{{ orderDetail.receiverProvince }} </span>
+                  <span v-if="orderDetail.receiverCity">{{ orderDetail.receiverCity }} </span>
+                  <span v-if="orderDetail.receiverRegion">{{ orderDetail.receiverRegion }} </span>
+                  {{ orderDetail.receiverDetailAddress || orderDetail.receiverAddress }}
+                </span>
               </div>
             </div>
           </div>
@@ -172,7 +179,11 @@ onMounted(() => {
                 class="goods-item"
               >
                 <div class="product-image">
-                  <img :src="item.productPic" :alt="item.productName" />
+                  <img
+                    :src="item.productPic || item.pic || 'https://via.placeholder.com/100'"
+                    :alt="item.productName"
+                    @error="handleImageError"
+                  />
                 </div>
                 <div class="product-info">
                   <div class="product-name">{{ item.productName }}</div>

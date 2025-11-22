@@ -2,7 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Upload, Plus, Delete, Warning } from '@element-plus/icons-vue'
+import { Upload, Plus, Delete, Warning, Checked } from '@element-plus/icons-vue'
 import { ORDER_STATUS, getOrderStatusName } from '@/utils/orderStatus'
 
 const route = useRoute()
@@ -159,6 +159,12 @@ const handleSubmitInspection = async () => {
     })
 }
 
+// 图片加载错误处理
+const handleImageError = (e) => {
+  e.target.src = 'https://via.placeholder.com/100?text=暂无图片'
+  e.target.onerror = null
+}
+
 onMounted(() => {
   fetchOrderDetail()
 })
@@ -211,7 +217,11 @@ onMounted(() => {
                 class="goods-item"
               >
                 <div class="product-image">
-                  <img :src="item.productPic" :alt="item.productName" />
+                  <img
+                    :src="item.productPic || item.pic || 'https://via.placeholder.com/100'"
+                    :alt="item.productName"
+                    @error="handleImageError"
+                  />
                 </div>
                 <div class="product-info">
                   <div class="product-name">{{ item.productName }}</div>
@@ -226,20 +236,40 @@ onMounted(() => {
             <div class="section-title">验收操作</div>
 
             <div class="inspection-options">
-              <el-radio-group v-model="inspectionResult">
-                <el-radio label="pass" size="large">
+              <div class="options-grid">
+                <div
+                  class="option-card"
+                  :class="{ active: inspectionResult === 'pass' }"
+                  @click="inspectionResult = 'pass'"
+                >
+                  <div class="option-icon success">
+                    <el-icon :size="48"><Checked /></el-icon>
+                  </div>
                   <div class="option-content">
                     <div class="option-title">验收通过</div>
                     <div class="option-desc">货物完好，符合订单要求</div>
                   </div>
-                </el-radio>
-                <el-radio label="fail" size="large">
+                  <div class="option-radio">
+                    <el-radio v-model="inspectionResult" label="pass" />
+                  </div>
+                </div>
+                <div
+                  class="option-card"
+                  :class="{ active: inspectionResult === 'fail' }"
+                  @click="inspectionResult = 'fail'"
+                >
+                  <div class="option-icon warning">
+                    <el-icon :size="48"><Warning /></el-icon>
+                  </div>
                   <div class="option-content">
                     <div class="option-title">验收失败</div>
                     <div class="option-desc">货物存在问题，需要退货或售后</div>
                   </div>
-                </el-radio>
-              </el-radio-group>
+                  <div class="option-radio">
+                    <el-radio v-model="inspectionResult" label="fail" />
+                  </div>
+                </div>
+              </div>
             </div>
 
             <!-- 验收失败详情 -->
@@ -429,42 +459,84 @@ onMounted(() => {
         .inspection-options {
           margin-bottom: 24px;
 
-          .el-radio-group {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
+          .options-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
             width: 100%;
 
-            .el-radio {
-              width: 100%;
-              margin: 0;
-              padding: 20px;
+            @media (max-width: 768px) {
+              grid-template-columns: 1fr;
+            }
+
+            .option-card {
+              position: relative;
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              padding: 32px 24px;
               border: 2px solid $border-light;
-              border-radius: $border-radius-base;
+              border-radius: $border-radius-large;
+              background: white;
+              cursor: pointer;
               transition: all 0.3s;
+              text-align: center;
 
               &:hover {
                 border-color: $primary-color;
                 background: rgba($primary-color, 0.02);
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba($primary-color, 0.1);
               }
 
-              &.is-checked {
+              &.active {
                 border-color: $primary-color;
                 background: rgba($primary-color, 0.05);
+                box-shadow: 0 4px 16px rgba($primary-color, 0.15);
+              }
+
+              .option-icon {
+                width: 80px;
+                height: 80px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin-bottom: 16px;
+
+                &.success {
+                  background: rgba($success-color, 0.1);
+                  color: $success-color;
+                }
+
+                &.warning {
+                  background: rgba($warning-color, 0.1);
+                  color: $warning-color;
+                }
               }
 
               .option-content {
+                flex: 1;
+                margin-bottom: 12px;
+
                 .option-title {
-                  font-size: 16px;
-                  font-weight: 500;
+                  font-size: 18px;
+                  font-weight: 600;
                   color: $text-primary;
-                  margin-bottom: 4px;
+                  margin-bottom: 8px;
                 }
 
                 .option-desc {
-                  font-size: 13px;
+                  font-size: 14px;
                   color: $text-secondary;
+                  line-height: 1.5;
                 }
+              }
+
+              .option-radio {
+                position: absolute;
+                top: 12px;
+                right: 12px;
               }
             }
           }
