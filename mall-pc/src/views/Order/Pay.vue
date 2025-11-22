@@ -181,7 +181,7 @@ onMounted(() => {
 
     .amount-desc {
       font-size: 12px;
-      color: $text-light;
+      color: $text-placeholder;
     }
   }
 
