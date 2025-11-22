@@ -1,15 +1,22 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage } from 'element-plus'
 import { View, Check, Close } from '@element-plus/icons-vue'
 import { enrichOrder } from '@/utils/productApi'
+import ConfirmDialog from '@/components/Common/ConfirmDialog.vue'
 
 const router = useRouter()
 
 // 待仲裁订单列表
 const arbitrationList = ref([])
 const loading = ref(false)
+
+// 确认对话框
+const showConfirmDialog = ref(false)
+const confirmAction = ref(null) // 'support' or 'reject'
+const currentOrder = ref(null)
+const processing = ref(false)
 
 // 获取待仲裁订单列表
 const fetchArbitrationOrders = async () => {
@@ -54,63 +61,88 @@ const viewArbitration = (order) => {
 }
 
 // 快速支持买家
-const supportBuyer = async (order) => {
+const supportBuyer = (order) => {
+  currentOrder.value = order
+  confirmAction.value = 'support'
+  showConfirmDialog.value = true
+}
+
+// 执行支持买家
+const executeSupportBuyer = async () => {
+  processing.value = true
+
   try {
-    await ElMessageBox.confirm(
-      '确认支持买家的仲裁申请吗？将要求卖家重新发货或退款。',
-      '支持买家',
-      {
-        confirmButtonText: '确认',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }
-    )
+    await new Promise(resolve => setTimeout(resolve, 800))
 
     const updatedOrder = {
-      ...order,
+      ...currentOrder.value,
       status: -3,
       statusName: '仲裁完成(支持买家)',
       arbitrationTime: new Date().toLocaleString('zh-CN'),
       arbitrationResult: 'support_buyer'
     }
 
-    localStorage.setItem(`order_${order.id}`, JSON.stringify(updatedOrder))
+    localStorage.setItem(`order_${currentOrder.value.id}`, JSON.stringify(updatedOrder))
     ElMessage.success('已支持买家申请')
+    showConfirmDialog.value = false
     fetchArbitrationOrders()
   } catch (error) {
-    if (error !== 'cancel') {
-      ElMessage.error('操作失败')
-    }
+    ElMessage.error('操作失败')
+  } finally {
+    processing.value = false
   }
 }
 
 // 快速驳回申请
-const rejectClaim = async (order) => {
+const rejectClaim = (order) => {
+  currentOrder.value = order
+  confirmAction.value = 'reject'
+  showConfirmDialog.value = true
+}
+
+// 执行驳回申请
+const executeRejectClaim = async () => {
+  processing.value = true
+
   try {
-    await ElMessageBox.confirm(
-      '确认驳回买家的仲裁申请吗？订单将进入待结算状态。',
-      '驳回申请',
-      {
-        confirmButtonText: '确认',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }
-    )
+    await new Promise(resolve => setTimeout(resolve, 800))
 
     const updatedOrder = {
-      ...order,
+      ...currentOrder.value,
       status: 3,
       statusName: '待结算',
       arbitrationTime: new Date().toLocaleString('zh-CN'),
       arbitrationResult: 'reject_claim'
     }
 
-    localStorage.setItem(`order_${order.id}`, JSON.stringify(updatedOrder))
+    localStorage.setItem(`order_${currentOrder.value.id}`, JSON.stringify(updatedOrder))
     ElMessage.success('已驳回申请，订单进入待结算')
+    showConfirmDialog.value = false
     fetchArbitrationOrders()
   } catch (error) {
-    if (error !== 'cancel') {
-      ElMessage.error('操作失败')
+    ElMessage.error('操作失败')
+  } finally {
+    processing.value = false
+  }
+}
+
+// 获取确认对话框配置
+const getConfirmConfig = () => {
+  if (confirmAction.value === 'support') {
+    return {
+      title: '支持买家',
+      message: '确认支持买家的仲裁申请吗？将要求卖家重新发货或退款。',
+      type: 'danger',
+      confirmText: '确认支持',
+      handler: executeSupportBuyer
+    }
+  } else {
+    return {
+      title: '驳回申请',
+      message: '确认驳回买家的仲裁申请吗？订单将进入待结算状态。',
+      type: 'success',
+      confirmText: '确认驳回',
+      handler: executeRejectClaim
     }
   }
 }
@@ -208,6 +240,19 @@ onMounted(() => {
 
         <el-empty v-else-if="!loading" description="暂无待仲裁的订单" />
       </div>
+
+      <!-- 确认对话框 -->
+      <ConfirmDialog
+        v-if="showConfirmDialog"
+        v-model="showConfirmDialog"
+        :title="getConfirmConfig().title"
+        :message="getConfirmConfig().message"
+        :type="getConfirmConfig().type"
+        :confirm-text="getConfirmConfig().confirmText"
+        cancel-text="取消"
+        :loading="processing"
+        @confirm="getConfirmConfig().handler"
+      />
     </div>
   </div>
 </template>

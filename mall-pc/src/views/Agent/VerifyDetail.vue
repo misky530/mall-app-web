@@ -1,9 +1,10 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage } from 'element-plus'
 import { Check, Close, ZoomIn } from '@element-plus/icons-vue'
 import { enrichOrder } from '@/utils/productApi'
+import ConfirmDialog from '@/components/Common/ConfirmDialog.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -26,6 +27,9 @@ const showRejectDialog = ref(false)
 // 图片预览
 const showImagePreview = ref(false)
 
+// 显示确认收款对话框
+const showConfirmDialog = ref(false)
+
 // 获取订单详情
 const fetchOrderDetail = async () => {
   try {
@@ -45,20 +49,15 @@ const fetchOrderDetail = async () => {
 }
 
 // 确认收款
-const handleConfirm = async () => {
+const handleConfirm = () => {
+  showConfirmDialog.value = true
+}
+
+// 确认收款操作
+const confirmPayment = async () => {
+  processing.value = true
+
   try {
-    await ElMessageBox.confirm(
-      '确认已收到买家的款项吗？确认后将通知卖家发货。',
-      '确认收款',
-      {
-        confirmButtonText: '确认收款',
-        cancelButtonText: '取消',
-        type: 'success'
-      }
-    )
-
-    processing.value = true
-
     // 模拟处理过程
     await new Promise(resolve => setTimeout(resolve, 1500))
 
@@ -75,13 +74,13 @@ const handleConfirm = async () => {
 
     ElMessage.success('收款确认成功，已通知卖家发货')
 
+    showConfirmDialog.value = false
+
     // 返回列表页
     router.push('/agent/pending-verify')
   } catch (error) {
-    if (error !== 'cancel') {
-      console.error('确认失败：', error)
-      ElMessage.error('确认失败，请重试')
-    }
+    console.error('确认失败：', error)
+    ElMessage.error('确认失败，请重试')
   } finally {
     processing.value = false
   }
@@ -307,6 +306,18 @@ onMounted(() => {
           <img :src="orderDetail?.paymentVoucher" alt="付款凭证" />
         </div>
       </el-dialog>
+
+      <!-- 确认收款对话框 -->
+      <ConfirmDialog
+        v-model="showConfirmDialog"
+        title="确认收款"
+        message="确认已收到买家的款项吗？确认后将通知卖家发货。"
+        type="success"
+        confirm-text="确认收款"
+        cancel-text="取消"
+        :loading="processing"
+        @confirm="confirmPayment"
+      />
     </div>
   </div>
 </template>
