@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Wallet, Scale, Money } from '@element-plus/icons-vue'
+import { Wallet, Document, Money } from '@element-plus/icons-vue'
 
 const router = useRouter()
 
@@ -15,7 +15,7 @@ const menuItems = ref([
   },
   {
     path: '/agent/arbitration',
-    icon: Scale,
+    icon: Document,
     label: '验收仲裁',
     badge: 0
   },
