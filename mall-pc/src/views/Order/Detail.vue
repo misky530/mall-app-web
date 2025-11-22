@@ -1,8 +1,8 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
-import { Location, Box, Checked, Clock } from '@element-plus/icons-vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { Location, Box, Checked, Clock, UploadFilled } from '@element-plus/icons-vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -14,6 +14,10 @@ const orderId = route.params.id
 const orderDetail = ref(null)
 // 加载状态
 const loading = ref(false)
+// 上传凭证加载状态
+const uploading = ref(false)
+// 上传文件列表
+const fileList = ref([])
 
 // 获取订单详情
 const fetchOrderDetail = async () => {
@@ -119,9 +123,50 @@ const fetchOrderDetail = async () => {
   }
 }
 
-// 去支付
-const handlePayOrder = () => {
-  router.push(`/order/pay/${orderId}`)
+// 上传成功处理
+const handleUploadSuccess = (response, file) => {
+  fileList.value.push(file)
+  ElMessage.success('凭证上传成功')
+}
+
+// 确认已付款
+const handleConfirmPayment = () => {
+  if (fileList.value.length === 0) {
+    ElMessage.warning('请先上传付款凭证')
+    return
+  }
+
+  ElMessageBox.confirm('确认您已完成付款并上传了正确的凭证吗？', '确认付款', {
+    confirmButtonText: '确认',
+    cancelButtonText: '取消',
+    type: 'warning'
+  }).then(async () => {
+    uploading.value = true
+    try {
+      // 模拟API调用
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      
+      // 更新localStorage中的订单状态
+      const updatedOrder = {
+        ...orderDetail.value,
+        status: 1, // Paid_Pending_Verify
+        statusName: '待确认收款'
+      }
+      localStorage.setItem(`order_${orderId}`, JSON.stringify(updatedOrder))
+      orderDetail.value = updatedOrder
+      
+      ElMessage.success('提交成功，等待经办人确认')
+    } catch (error) {
+      ElMessage.error('提交失败，请重试')
+    } finally {
+      uploading.value = false
+    }
+  })
+}
+
+// 去验收
+const handleGoToAcceptance = () => {
+  router.push(`/order/acceptance/${orderId}`)
 }
 
 // 取消订单
@@ -174,10 +219,11 @@ const getOrderSteps = () => {
   if (!orderDetail.value) return []
 
   const steps = [
-    { title: '提交订单', time: orderDetail.value.createTime, active: true },
-    { title: '支付订单', time: orderDetail.value.payTime, active: orderDetail.value.status >= 1 },
-    { title: '商品发货', time: orderDetail.value.deliveryTime, active: orderDetail.value.status >= 2 },
-    { title: '确认收货', time: orderDetail.value.receiveTime, active: orderDetail.value.status >= 3 }
+    { title: '提交订单', time: orderDetail.value.createTime, status: 'success' },
+    { title: '买家付款', time: orderDetail.value.payTime, status: orderDetail.value.status >= 1 ? 'success' : 'wait' },
+    { title: '等待收款确认', time: '', status: orderDetail.value.status >= 2 ? 'success' : (orderDetail.value.status === 1 ? 'process' : 'wait') },
+    { title: '商品发货', time: orderDetail.value.deliveryTime, status: orderDetail.value.status >= 3 ? 'success' : 'wait' },
+    { title: '确认收货', time: orderDetail.value.receiveTime, status: orderDetail.value.status >= 4 ? 'success' : 'wait' }
   ]
 
   return steps
@@ -187,6 +233,601 @@ onMounted(() => {
   fetchOrderDetail()
 })
 </script>
+
+<template>
+  <div class="order-detail-page">
+    <div class="container">
+      <!-- 面包屑 -->
+      <el-breadcrumb separator="/" class="breadcrumb">
+        <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
+        <el-breadcrumb-item :to="{ path: '/order/list' }">我的订单</el-breadcrumb-item>
+        <el-breadcrumb-item>订单详情</el-breadcrumb-item>
+      </el-breadcrumb>
+
+      <div v-loading="loading" class="order-detail-content">
+        <el-empty v-if="!orderDetail && !loading" description="订单不存在" />
+
+        <div v-if="orderDetail" class="detail-sections">
+          <!-- 订单状态 -->
+          <div class="section status-section">
+            <div class="status-header">
+              <div class="status-info">
+                <el-icon :size="24"><Checked /></el-icon>
+                <span class="status-text">{{ orderDetail.statusName }}</span>
+              </div>
+              <div class="order-sn">订单号：{{ orderDetail.orderSn }}</div>
+            </div>
+
+            <!-- 订单进度 -->
+            <div class="order-steps">
+              <el-steps :active="orderDetail.status + 1" align-center>
+                <el-step
+                  v-for="(step, index) in getOrderSteps()"
+                  :key="index"
+                  :title="step.title"
+                  :description="step.time || ''"
+                  :status="step.status"
+                />
+              </el-steps>
+            </div>
+          </div>
+
+          <!-- 付款凭证上传 -->
+          <div v-if="orderDetail.status === 0" class="section payment-proof-section">
+            <div class="section-title">
+              <span>上传付款凭证</span>
+            </div>
+            <div class="payment-proof-content">
+              <div class="bank-info">
+                <h4>请向以下账户汇款：</h4>
+                <p><strong>户名：</strong>商城平台有限公司</p>
+                <p><strong>账号：</strong>6222 8888 9999 0000</p>
+                <p><strong>开户行：</strong>招商银行 深圳高新支行</p>
+              </div>
+              <el-upload
+                class="upload-dragger"
+                drag
+                action="#"
+                :auto-upload="false"
+                :on-change="handleUploadSuccess"
+                :file-list="fileList"
+                :limit="1"
+              >
+                <el-icon class="el-icon--upload"><upload-filled /></el-icon>
+                <div class="el-upload__text">
+                  将文件拖到此处，或<em>点击上传</em>
+                </div>
+                <template #tip>
+                  <div class="el-upload__tip">
+                    请上传银行汇款回执单（图片/PDF），文件大小不超过10MB
+                  </div>
+                </template>
+              </el-upload>
+              <el-button
+                type="primary"
+                :loading="uploading"
+                @click="handleConfirmPayment"
+                class="confirm-payment-btn"
+              >
+                我已付款，确认提交
+              </el-button>
+            </div>
+          </div>
+
+          <!-- 收货信息 -->
+          <div class="section address-section">
+            <div class="section-title">
+              <el-icon><Location /></el-icon>
+              <span>收货信息</span>
+            </div>
+            <div class="address-content">
+              <div class="address-row">
+                <span class="label">收货人：</span>
+                <span class="value">{{ orderDetail.receiverName }} {{ orderDetail.receiverPhone }}</span>
+              </div>
+              <div class="address-row">
+                <span class="label">收货地址：</span>
+                <span class="value">
+                  {{ orderDetail.receiverProvince }} {{ orderDetail.receiverCity }}
+                  {{ orderDetail.receiverRegion }} {{ orderDetail.receiverDetailAddress }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 商品信息 -->
+          <div class="section goods-section">
+            <div class="section-title">
+              <el-icon><Box /></el-icon>
+              <span>商品信息</span>
+            </div>
+            <div class="goods-list">
+              <div class="goods-header">
+                <div class="col-product">商品</div>
+                <div class="col-price">单价</div>
+                <div class="col-quantity">数量</div>
+                <div class="col-subtotal">小计</div>
+              </div>
+              <div class="goods-items">
+                <div
+                  v-for="item in orderDetail.items"
+                  :key="item.id"
+                  class="goods-item"
+                >
+                  <div class="col-product">
+                    <div class="product-info">
+                      <div class="product-image">
+                        <img
+                          :src="item.productPic"
+                          :alt="item.productName"
+                          @error="handleImageError"
+                        />
+                      </div>
+                      <div class="product-detail">
+                        <div class="product-name">{{ item.productName }}</div>
+                        <div class="product-sku" v-if="item.productSku">{{ item.productSku }}</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-price">¥{{ item.price.toFixed(2) }}</div>
+                  <div class="col-quantity">{{ item.quantity }}</div>
+                  <div class="col-subtotal">¥{{ (item.price * item.quantity).toFixed(2) }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 物流信息 -->
+          <div v-if="orderDetail.deliverySn" class="section logistics-section">
+            <div class="section-title">
+              <el-icon><Clock /></el-icon>
+              <span>物流信息</span>
+            </div>
+            <div class="logistics-info">
+              <div class="logistics-header">
+                <span class="company">{{ orderDetail.deliveryCompany }}</span>
+                <span class="tracking-no">运单号：{{ orderDetail.deliverySn }}</span>
+                <span class="status">{{ orderDetail.logisticsStatus }}</span>
+              </div>
+              <div class="logistics-trace">
+                <el-timeline>
+                  <el-timeline-item
+                    v-for="(trace, index) in orderDetail.logisticsTrace"
+                    :key="index"
+                    :timestamp="trace.time"
+                    :type="index === 0 ? 'primary' : ''"
+                  >
+                    {{ trace.content }}
+                  </el-timeline-item>
+                </el-timeline>
+              </div>
+            </div>
+          </div>
+
+          <!-- 订单信息 -->
+          <div class="section order-info-section">
+            <div class="section-title">
+              <span>订单信息</span>
+            </div>
+            <div class="order-info-content">
+              <div class="info-row">
+                <span class="label">订单编号：</span>
+                <span class="value">{{ orderDetail.orderSn }}</span>
+              </div>
+              <div class="info-row">
+                <span class="label">创建时间：</span>
+                <span class="value">{{ orderDetail.createTime }}</span>
+              </div>
+              <div class="info-row" v-if="orderDetail.payTime">
+                <span class="label">支付时间：</span>
+                <span class="value">{{ orderDetail.payTime }}</span>
+              </div>
+              <div class="info-row" v-if="orderDetail.payType">
+                <span class="label">支付方式：</span>
+                <span class="value">{{ orderDetail.payTypeName }}</span>
+              </div>
+              <div class="info-row" v-if="orderDetail.remark">
+                <span class="label">订单备注：</span>
+                <span class="value">{{ orderDetail.remark }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 费用信息 -->
+          <div class="section payment-section">
+            <div class="payment-info">
+              <div class="info-row">
+                <span class="label">商品总价：</span>
+                <span class="value">¥{{ orderDetail.totalAmount.toFixed(2) }}</span>
+              </div>
+              <div class="info-row">
+                <span class="label">运费：</span>
+                <span class="value">¥{{ orderDetail.freightAmount.toFixed(2) }}</span>
+              </div>
+              <div class="info-row total-row">
+                <span class="label">实付款：</span>
+                <span class="total-price">¥{{ orderDetail.payAmount.toFixed(2) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 操作按钮 -->
+          <div class="section actions-section">
+            <el-button v-if="orderDetail.status === 0" @click="handleCancelOrder">
+              取消订单
+            </el-button>
+            <el-button v-if="orderDetail.status === 2" type="primary" @click="handleGoToAcceptance">
+              去验收
+            </el-button>
+            <el-button v-if="orderDetail.status === 2" @click="handleViewLogistics">
+              查看物流
+            </el-button>
+            <el-button v-if="orderDetail.status >= 3" @click="handleAfterSale">
+              申请售后
+            </el-button>
+            <el-button @click="router.push('/order/list')">
+              返回订单列表
+            </el-button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<style scoped lang="scss">
+@import '@/assets/styles/variables.scss';
+
+.order-detail-page {
+  padding: 20px 0;
+  background: #f5f5f5;
+  min-height: calc(100vh - 200px);
+
+  .breadcrumb {
+    margin-bottom: 20px;
+  }
+
+  .order-detail-content {
+    min-height: 400px;
+
+    .detail-sections {
+      .section {
+        background: white;
+        border-radius: $border-radius-base;
+        padding: 20px;
+        margin-bottom: 16px;
+
+        .section-title {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 16px;
+          font-weight: 500;
+          color: $text-primary;
+          margin-bottom: 16px;
+          padding-bottom: 12px;
+          border-bottom: 1px solid $border-lighter;
+        }
+      }
+
+      // 订单状态
+      .status-section {
+        .status-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 24px;
+
+          .status-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+
+            .status-text {
+              font-size: 20px;
+              font-weight: 500;
+              color: $primary-color;
+            }
+          }
+
+          .order-sn {
+            font-size: 14px;
+            color: $text-secondary;
+          }
+        }
+
+        .order-steps {
+          padding: 20px 40px;
+        }
+      }
+
+      // 付款凭证
+      .payment-proof-section {
+        .payment-proof-content {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 20px;
+
+          .bank-info {
+            padding: 16px;
+            background: #f8f9fa;
+            border-radius: $border-radius-base;
+            width: 100%;
+            line-height: 1.8;
+            h4 {
+              margin-bottom: 12px;
+            }
+          }
+
+          .upload-dragger {
+            width: 100%;
+          }
+
+          .confirm-payment-btn {
+            width: 200px;
+            height: 40px;
+          }
+        }
+      }
+
+      // 收货信息
+      .address-section {
+        .address-content {
+          .address-row {
+            display: flex;
+            margin-bottom: 12px;
+            font-size: 14px;
+
+            &:last-child {
+              margin-bottom: 0;
+            }
+
+            .label {
+              color: $text-secondary;
+              min-width: 80px;
+            }
+
+            .value {
+              color: $text-primary;
+              flex: 1;
+            }
+          }
+        }
+      }
+
+      // 商品信息
+      .goods-section {
+        .goods-list {
+          .goods-header {
+            display: grid;
+            grid-template-columns: 1fr 120px 120px 120px;
+            padding: 12px 16px;
+            background: #f8f9fa;
+            border-radius: $border-radius-small;
+            font-size: 14px;
+            font-weight: 500;
+            color: $text-secondary;
+
+            .col-price,
+            .col-quantity,
+            .col-subtotal {
+              text-align: center;
+            }
+          }
+
+          .goods-items {
+            .goods-item {
+              display: grid;
+              grid-template-columns: 1fr 120px 120px 120px;
+              padding: 16px;
+              border-bottom: 1px solid $border-lighter;
+
+              &:last-child {
+                border-bottom: none;
+              }
+
+              .col-product {
+                .product-info {
+                  display: flex;
+                  gap: 12px;
+
+                  .product-image {
+                    width: 80px;
+                    height: 80px;
+                    border-radius: $border-radius-small;
+                    overflow: hidden;
+                    border: 1px solid $border-lighter;
+                    flex-shrink: 0;
+
+                    img {
+                      width: 100%;
+                      height: 100%;
+                      object-fit: cover;
+                    }
+                  }
+
+                  .product-detail {
+                    flex: 1;
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: center;
+
+                    .product-name {
+                      font-size: 14px;
+                      color: $text-primary;
+                      line-height: 1.5;
+                      margin-bottom: 4px;
+                    }
+
+                    .product-sku {
+                      font-size: 12px;
+                      color: $text-placeholder;
+                    }
+                  }
+                }
+              }
+
+              .col-price,
+              .col-quantity,
+              .col-subtotal {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 14px;
+                color: $text-primary;
+              }
+
+              .col-subtotal {
+                font-weight: 500;
+                color: $primary-color;
+              }
+            }
+          }
+        }
+      }
+
+      // 物流信息
+      .logistics-section {
+        .logistics-info {
+          .logistics-header {
+            display: flex;
+            gap: 24px;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: $border-radius-small;
+            margin-bottom: 16px;
+            font-size: 14px;
+
+            .company {
+              font-weight: 500;
+              color: $text-primary;
+            }
+
+            .tracking-no {
+              color: $text-secondary;
+            }
+
+            .status {
+              color: $primary-color;
+            }
+          }
+
+          .logistics-trace {
+            padding: 12px;
+          }
+        }
+      }
+
+      // 订单信息
+      .order-info-section {
+        .order-info-content {
+          .info-row {
+            display: flex;
+            margin-bottom: 12px;
+            font-size: 14px;
+
+            &:last-child {
+              margin-bottom: 0;
+            }
+
+            .label {
+              color: $text-secondary;
+              min-width: 100px;
+            }
+
+            .value {
+              color: $text-primary;
+              flex: 1;
+            }
+          }
+        }
+      }
+
+      // 费用信息
+      .payment-section {
+        .payment-info {
+          padding: 16px;
+          background: #f8f9fa;
+          border-radius: $border-radius-small;
+
+          .info-row {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            padding: 8px 0;
+            font-size: 14px;
+
+            .label {
+              color: $text-secondary;
+              margin-right: 12px;
+            }
+
+            .value {
+              color: $text-primary;
+              min-width: 100px;
+              text-align: right;
+            }
+
+            &.total-row {
+              margin-top: 8px;
+              padding-top: 16px;
+              border-top: 1px solid $border-lighter;
+              font-size: 16px;
+
+              .label {
+                font-weight: 500;
+              }
+
+              .total-price {
+                font-size: 24px;
+                font-weight: bold;
+                color: $primary-color;
+              }
+            }
+          }
+        }
+      }
+
+      // 操作按钮
+      .actions-section {
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+      }
+    }
+  }
+}
+
+// 响应式
+@media (max-width: 768px) {
+  .goods-header,
+  .goods-item {
+    grid-template-columns: 1fr !important;
+
+    .col-price,
+    .col-quantity,
+    .col-subtotal {
+      text-align: left !important;
+      padding: 4px 0;
+    }
+  }
+
+  .logistics-header {
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+
+  .actions-section {
+    flex-direction: column;
+
+    .el-button {
+      width: 100%;
+    }
+  }
+}
+</style>
+
 
 <template>
   <div class="order-detail-page">

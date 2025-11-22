@@ -75,6 +75,15 @@ export default [
         }
       },
       {
+        path: 'order/acceptance/:id',
+        name: 'OrderAcceptance',
+        component: () => import('@/views/Order/Acceptance.vue'),
+        meta: {
+          title: '商品验收',
+          requiresAuth: true
+        }
+      },
+      {
         path: 'order/pay/:id',
         name: 'OrderPay',
         component: () => import('@/views/Order/Pay.vue'),

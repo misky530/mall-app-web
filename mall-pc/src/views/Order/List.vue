@@ -10,10 +10,11 @@ const router = useRouter()
 const orderStatusTabs = [
   { label: '全部订单', value: '' },
   { label: '待付款', value: 0 },
-  { label: '待发货', value: 1 },
-  { label: '待收货', value: 2 },
-  { label: '待评价', value: 3 },
-  { label: '已完成', value: 4 }
+  { label: '待确认', value: 1 },
+  { label: '待发货', value: 2 },
+  { label: '待收货', value: 3 },
+  { label: '维权中', value: 5 },
+  { label: '已完成', value: 6 }
 ]
 
 // 当前激活的标签
@@ -40,7 +41,11 @@ const fetchOrderList = async () => {
     // 根据状态筛选
     let filteredOrders = orders
     if (activeTab.value !== '') {
-      filteredOrders = orders.filter(order => order.status === activeTab.value)
+      if (activeTab.value === 6) { // 已完成 tab 包括 待结算和已结算
+        filteredOrders = orders.filter(order => order.status >= 6)
+      } else {
+        filteredOrders = orders.filter(order => order.status === activeTab.value)
+      }
     }
 
     // 按创建时间倒序排列（最新的在前）
@@ -138,31 +143,6 @@ const handleCancelOrder = (order) => {
   ElMessage.info('取消订单功能待开发')
 }
 
-// 删除订单
-const handleDeleteOrder = (order) => {
-  ElMessage.info('删除订单功能待开发')
-}
-
-// 去支付
-const handlePayOrder = (order) => {
-  router.push(`/order/pay/${order.id}`)
-}
-
-// 确认收货
-const handleConfirmReceipt = (order) => {
-  ElMessage.info('确认收货功能待开发')
-}
-
-// 申请售后
-const handleAfterSale = (order) => {
-  ElMessage.info('售后功能待开发')
-}
-
-// 评价
-const handleEvaluate = (order) => {
-  ElMessage.info('评价功能待开发')
-}
-
 // 再次购买
 const handleBuyAgain = (order) => {
   ElMessage.info('再次购买功能待开发')
@@ -190,23 +170,23 @@ const getOrderActions = (order) => {
 
   switch (order.status) {
     case 0: // 待付款
-      actions.push({ label: '去支付', type: 'primary', handler: handlePayOrder })
+      actions.push({ label: '上传凭证', type: 'primary', handler: () => goToDetail(order.id) })
       actions.push({ label: '取消订单', type: 'info', handler: handleCancelOrder })
       break
-    case 1: // 待发货
-      actions.push({ label: '查看详情', type: 'primary', handler: goToDetail })
+    case 1: // 待确认收款
+    case 2: // 待发货
+      actions.push({ label: '查看详情', type: 'primary', handler: () => goToDetail(order.id) })
       break
-    case 2: // 待收货
-      actions.push({ label: '确认收货', type: 'primary', handler: handleConfirmReceipt })
-      actions.push({ label: '查看物流', type: 'info', handler: goToDetail })
+    case 3: // 待收货
+      actions.push({ label: '去验收', type: 'primary', handler: () => router.push(`/order/acceptance/${order.id}`) })
+      actions.push({ label: '查看物流', type: 'info', handler: () => goToDetail(order.id) })
       break
-    case 3: // 待评价
-      actions.push({ label: '去评价', type: 'primary', handler: handleEvaluate })
-      actions.push({ label: '查看详情', type: 'info', handler: goToDetail })
+    case 5: // 维权中
+      actions.push({ label: '查看详情', type: 'danger', handler: () => goToDetail(order.id) })
       break
-    case 4: // 已完成
+    case 6: // 待结算
+    case 7: // 已结算
       actions.push({ label: '再次购买', type: 'primary', handler: handleBuyAgain })
-      actions.push({ label: '申请售后', type: 'info', handler: handleAfterSale })
       break
   }
 

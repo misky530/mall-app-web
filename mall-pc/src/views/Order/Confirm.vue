@@ -18,6 +18,8 @@ const selectedAddress = ref(null)
 const showAddressDialog = ref(false)
 // 备注
 const remark = ref('')
+// 发票信息
+const invoiceInfo = ref('')
 // 提交中
 const submitting = ref(false)
 
@@ -98,10 +100,10 @@ const handleSubmitOrder = async () => {
   }
 
   ElMessageBox.confirm(
-    `确认提交订单？应付金额：¥${orderTotal.value.toFixed(2)}`,
-    '确认订单',
+    `应付总额: ¥${orderTotal.value.toFixed(2)}`,
+    '确认提交订单',
     {
-      confirmButtonText: '确认支付',
+      confirmButtonText: '提交',
       cancelButtonText: '取消',
       type: 'warning'
     }
@@ -114,13 +116,42 @@ const handleSubmitOrder = async () => {
 
         // 创建订单成功
         const orderId = Date.now()
-        ElMessage.success('订单创建成功')
+        
+        // 构造一个待支付的订单对象
+        const orderData = {
+          id: orderId,
+          orderSn: `ORD${orderId}`,
+          status: 0, // 0: 待付款
+          statusName: '待付款',
+          createTime: new Date().toLocaleString('zh-CN'),
+          payTime: null,
+          deliveryTime: null,
+          receiveTime: null,
+          totalAmount: goodsTotal.value,
+          freightAmount: freight.value,
+          payAmount: orderTotal.value,
+          payType: 3, // 3: 对公转账
+          payTypeName: '对公转账',
+          remark: remark.value,
+          invoiceInfo: invoiceInfo.value,
+          ...selectedAddress.value,
+          items: selectedItems.value.map(item => ({
+            ...item,
+            productPic: item.productPic || item.pic
+          }))
+        }
 
-        // 清空购物车选中项
-        // 这里应该调用 API 清空已下单商品
+        // 使用localStorage模拟数据库保存订单
+        localStorage.setItem(`order_${orderId}`, JSON.stringify(orderData))
+        
+        ElMessage.success('订单创建成功，请尽快完成付款')
 
-        // 跳转到支付页面
-        router.push(`/order/pay/${orderId}`)
+        // 从购物车移除已下单的商品
+        const itemIds = selectedItems.value.map(item => item.id)
+        await cartStore.removeCartItems({ cartIds: itemIds })
+
+        // 跳转到订单详情页面
+        router.push(`/order/detail/${orderId}`)
       } catch (error) {
         console.error('提交订单失败：', error)
         ElMessage.error('提交订单失败，请重试')
@@ -129,7 +160,7 @@ const handleSubmitOrder = async () => {
       }
     })
     .catch(() => {
-      ElMessage.info('已取消')
+      ElMessage.info('已取消提交')
     })
 }
 
@@ -245,6 +276,39 @@ onMounted(() => {
               </div>
             </div>
           </div>
+        </div>
+
+        <!-- 支付方式 -->
+        <div class="section payment-method-section">
+          <div class="section-title">
+            <span>支付方式</span>
+          </div>
+          <div class="payment-method-content">
+            <div class="method-name">线下对公转账</div>
+            <div class="bank-info">
+              <p><strong>户名：</strong>商城平台有限公司</p>
+              <p><strong>账号：</strong>6222 8888 9999 0000</p>
+              <p><strong>开户行：</strong>招商银行 深圳高新支行</p>
+            </div>
+            <el-alert
+              title="请务必在转账时备注订单号，以便财务及时确认。"
+              type="warning"
+              show-icon
+              :closable="false"
+            />
+          </div>
+        </div>
+
+        <!-- 发票信息 -->
+        <div class="section invoice-section">
+          <div class="section-title">
+            <span>发票信息</span>
+          </div>
+          <el-input
+            v-model="invoiceInfo"
+            placeholder="请填写发票抬头及纳税人识别号"
+            maxlength="100"
+          />
         </div>
 
         <!-- 备注 -->
