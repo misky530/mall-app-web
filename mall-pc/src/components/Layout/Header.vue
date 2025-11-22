@@ -90,6 +90,8 @@ watch(
           <el-divider direction="vertical" />
           <router-link to="/order/list">我的订单</router-link>
           <el-divider direction="vertical" />
+          <router-link to="/seller">卖家中心</router-link>
+          <el-divider direction="vertical" />
           <router-link to="/agent">经办人中心</router-link>
         </div>
       </div>

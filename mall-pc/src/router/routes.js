@@ -181,6 +181,34 @@ export default [
           title: '执行结算',
           requiresAuth: true
         }
+      },
+      // 卖家路由
+      {
+        path: 'seller',
+        name: 'SellerIndex',
+        component: () => import('@/views/Seller/Index.vue'),
+        meta: {
+          title: '卖家工作台',
+          requiresAuth: true
+        }
+      },
+      {
+        path: 'seller/orders',
+        name: 'SellerOrderList',
+        component: () => import('@/views/Seller/OrderList.vue'),
+        meta: {
+          title: '卖家订单',
+          requiresAuth: true
+        }
+      },
+      {
+        path: 'seller/order/:id',
+        name: 'SellerOrderDetail',
+        component: () => import('@/views/Seller/OrderDetail.vue'),
+        meta: {
+          title: '订单详情',
+          requiresAuth: true
+        }
       }
     ]
   },
