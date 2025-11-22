@@ -241,23 +241,18 @@ onMounted(() => {
       </div>
     </section>
 
-    <!-- 分类导航 -->
-    <section class="category-section">
+    <!-- 商品分类 -->
+    <section v-if="categoryList.length > 0" class="category-section">
       <div class="container">
-        <div class="section-header">
-          <h2>商品分类</h2>
-          <p>精选优质商品，满足您的多样需求</p>
-        </div>
-        <div class="category-grid">
+        <div class="category-list">
           <div
-            v-for="category in categoryList"
+            v-for="category in categoryList.slice(0, 8)"
             :key="category.id"
             class="category-item"
             @click="goToCategory(category)"
           >
             <div class="category-icon">{{ category.icon }}</div>
             <div class="category-name">{{ category.name }}</div>
-            <div class="category-count">{{ category.count }}+件商品</div>
           </div>
         </div>
       </div>
@@ -484,11 +479,12 @@ onMounted(() => {
 
     .flash-header-left {
       h2 {
-        color: white;
+        color: white !important;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
       }
 
       p {
-        color: rgba(255, 255, 255, 0.9);
+        color: rgba(255, 255, 255, 0.95) !important;
       }
     }
 
@@ -498,7 +494,7 @@ onMounted(() => {
       gap: 8px;
 
       .countdown-label {
-        color: rgba(255, 255, 255, 0.9);
+        color: rgba(255, 255, 255, 0.95);
         font-size: 14px;
       }
 
@@ -521,49 +517,55 @@ onMounted(() => {
         font-weight: bold;
       }
     }
+
+    // 覆盖通用样式，确保秒杀区域的文字是白色
+    h2, p {
+      color: white;
+    }
   }
 }
 
 // 分类区域
 .category-section {
-  padding: 60px 0;
+  padding: 30px 0;
   background: white;
 
-  .category-grid {
-    display: grid;
-    grid-template-columns: repeat(8, 1fr);
+  .category-list {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    flex-wrap: wrap;
     gap: 20px;
-    margin-top: 40px;
 
     .category-item {
-      text-align: center;
-      padding: 30px 20px;
-      background: #f8f9fa;
-      border-radius: $border-radius-base;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
       cursor: pointer;
       transition: all 0.3s;
 
       &:hover {
-        background: $primary-color;
-        color: white;
         transform: translateY(-4px);
-        box-shadow: 0 4px 12px rgba($primary-color, 0.3);
+
+        .category-icon {
+          transform: scale(1.1);
+        }
+
+        .category-name {
+          color: $primary-color;
+        }
       }
 
       .category-icon {
-        font-size: 48px;
+        font-size: 56px;
         margin-bottom: 12px;
+        transition: transform 0.3s;
       }
 
       .category-name {
-        font-size: 16px;
-        font-weight: 500;
-        margin-bottom: 8px;
-      }
-
-      .category-count {
-        font-size: 12px;
-        opacity: 0.7;
+        font-size: 14px;
+        color: $text-primary;
+        transition: color 0.3s;
       }
     }
   }
