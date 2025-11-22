@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { Location, Box, Checked, Clock } from '@element-plus/icons-vue'
 import AcceptanceDialog from '@/components/Order/AcceptanceDialog.vue'
+import { enrichOrder } from '@/utils/productApi'
 
 const route = useRoute()
 const router = useRouter()
@@ -31,7 +32,9 @@ const fetchOrderDetail = async () => {
 
     if (savedOrder) {
       // 使用实际的订单数据
-      orderDetail.value = JSON.parse(savedOrder)
+      const order = JSON.parse(savedOrder)
+      // 获取完整商品信息
+      orderDetail.value = await enrichOrder(order)
     } else {
       // 如果没有找到订单数据，显示Mock数据（用于演示）
       orderDetail.value = {
@@ -389,7 +392,8 @@ onMounted(() => {
             <el-button v-if="orderDetail.status === 2 && orderDetail.payType === 3" type="success" @click="handleAcceptance">
               货物验收
             </el-button>
-            <el-button v-if="orderDetail.status === 2" type="primary" @click="handleConfirmReceipt">
+            <!-- 普通订单确认收货：状态为已发货(2)且非B2B订单时显示 -->
+            <el-button v-if="orderDetail.status === 2 && orderDetail.payType !== 3" type="primary" @click="handleConfirmReceipt">
               确认收货
             </el-button>
             <el-button v-if="orderDetail.status === 2" @click="handleViewLogistics">
