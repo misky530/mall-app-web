@@ -126,6 +126,61 @@ export default [
           title: '浏览历史',
           requiresAuth: true
         }
+      },
+      // 经办人路由
+      {
+        path: 'agent',
+        name: 'AgentIndex',
+        component: () => import('@/views/Agent/Index.vue'),
+        meta: {
+          title: '经办人工作台',
+          requiresAuth: true
+        }
+      },
+      {
+        path: 'agent/pending-verify',
+        name: 'AgentPendingVerify',
+        component: () => import('@/views/Agent/PendingVerify.vue'),
+        meta: {
+          title: '待确认收款',
+          requiresAuth: true
+        }
+      },
+      {
+        path: 'agent/verify/:id',
+        name: 'AgentVerifyDetail',
+        component: () => import('@/views/Agent/VerifyDetail.vue'),
+        meta: {
+          title: '确认收款',
+          requiresAuth: true
+        }
+      },
+      {
+        path: 'agent/arbitration',
+        name: 'AgentArbitrationList',
+        component: () => import('@/views/Agent/ArbitrationList.vue'),
+        meta: {
+          title: '验收仲裁',
+          requiresAuth: true
+        }
+      },
+      {
+        path: 'agent/settlement',
+        name: 'AgentSettlementList',
+        component: () => import('@/views/Agent/SettlementList.vue'),
+        meta: {
+          title: '待结算订单',
+          requiresAuth: true
+        }
+      },
+      {
+        path: 'agent/settlement/:id',
+        name: 'AgentSettlementDetail',
+        component: () => import('@/views/Agent/SettlementDetail.vue'),
+        meta: {
+          title: '执行结算',
+          requiresAuth: true
+        }
       }
     ]
   },

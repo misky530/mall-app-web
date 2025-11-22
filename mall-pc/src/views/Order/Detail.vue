@@ -3,12 +3,16 @@ import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { Location, Box, Checked, Clock } from '@element-plus/icons-vue'
+import AcceptanceDialog from '@/components/Order/AcceptanceDialog.vue'
 
 const route = useRoute()
 const router = useRouter()
 
 // 订单ID
 const orderId = route.params.id
+
+// 验收对话框
+const showAcceptanceDialog = ref(false)
 
 // 订单详情
 const orderDetail = ref(null)
@@ -129,9 +133,20 @@ const handleCancelOrder = () => {
   ElMessage.info('取消订单功能待开发')
 }
 
-// 确认收货
+// 确认收货（原有功能保留）
 const handleConfirmReceipt = () => {
   ElMessage.info('确认收货功能待开发')
+}
+
+// 打开验收对话框（B2B新功能）
+const handleAcceptance = () => {
+  showAcceptanceDialog.value = true
+}
+
+// 验收成功回调
+const handleAcceptanceSuccess = () => {
+  // 重新加载订单详情
+  fetchOrderDetail()
 }
 
 // 申请售后
@@ -370,6 +385,10 @@ onMounted(() => {
             <el-button v-if="orderDetail.status === 0" @click="handleCancelOrder">
               取消订单
             </el-button>
+            <!-- B2B验收功能：状态为已发货(2)且支付方式为对公转账(3)时显示验收按钮 -->
+            <el-button v-if="orderDetail.status === 2 && orderDetail.payType === 3" type="success" @click="handleAcceptance">
+              货物验收
+            </el-button>
             <el-button v-if="orderDetail.status === 2" type="primary" @click="handleConfirmReceipt">
               确认收货
             </el-button>
@@ -386,6 +405,13 @@ onMounted(() => {
         </div>
       </div>
     </div>
+
+    <!-- 验收对话框 -->
+    <AcceptanceDialog
+      v-model="showAcceptanceDialog"
+      :order-id="orderId"
+      @success="handleAcceptanceSuccess"
+    />
   </div>
 </template>
 
