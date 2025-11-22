@@ -113,34 +113,23 @@ const handleConfirm = () => {
 <template>
   <el-dialog
     :model-value="modelValue"
-    width="480px"
+    width="460px"
     @close="handleClose"
     :show-close="true"
     class="confirm-dialog-wrapper"
   >
-    <template #header>
-      <div class="dialog-header" :style="{ background: `linear-gradient(135deg, ${getBackgroundColor()} 0%, ${getBackgroundColor()} 100%)` }">
-        <div class="header-icon" :style="{ boxShadow: `0 2px 8px ${getColor()}33` }">
-          <el-icon :size="28" :color="getColor()">
+    <div class="confirm-dialog">
+      <div class="icon-section">
+        <div class="main-icon" :style="{ background: getColor() }">
+          <el-icon :size="48" color="#fff">
             <component :is="getIcon()" />
           </el-icon>
-        </div>
-        <div class="header-text">
-          <h3>{{ title }}</h3>
         </div>
       </div>
-    </template>
 
-    <div class="confirm-dialog">
-      <div class="message-box" :style="{ background: getBackgroundColor(), borderColor: getBorderColor() }">
-        <div class="message-icon">
-          <el-icon :size="24" :color="getColor()">
-            <component :is="getIcon()" />
-          </el-icon>
-        </div>
-        <div class="message-text">
-          {{ message }}
-        </div>
+      <div class="content-section">
+        <h3 class="dialog-title">{{ title }}</h3>
+        <p class="dialog-message">{{ message }}</p>
       </div>
     </div>
 
@@ -175,68 +164,45 @@ const handleConfirm = () => {
   }
 
   :deep(.el-dialog__body) {
-    padding: 30px;
+    padding: 40px 30px 30px;
   }
 
   :deep(.el-dialog__footer) {
-    padding: 20px 30px;
-    border-top: 1px solid $border-lighter;
-  }
-
-  .dialog-header {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    padding: 24px 30px;
-    border-bottom: 1px solid $border-lighter;
-
-    .header-icon {
-      width: 56px;
-      height: 56px;
-      border-radius: 50%;
-      background: white;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .header-text {
-      h3 {
-        margin: 0;
-        font-size: 20px;
-        font-weight: 600;
-        color: $text-primary;
-      }
-    }
+    padding: 0 30px 30px;
   }
 }
 
 .confirm-dialog {
-  .message-box {
-    display: flex;
-    align-items: flex-start;
-    gap: 16px;
-    padding: 20px 24px;
-    border-radius: 8px;
-    border: 1px solid;
+  text-align: center;
 
-    .message-icon {
-      flex-shrink: 0;
-      width: 40px;
-      height: 40px;
-      display: flex;
+  .icon-section {
+    margin-bottom: 24px;
+
+    .main-icon {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      display: inline-flex;
       align-items: center;
       justify-content: center;
-      background: white;
-      border-radius: 50%;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    }
+  }
+
+  .content-section {
+    .dialog-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: $text-primary;
+      margin: 0 0 16px 0;
     }
 
-    .message-text {
-      flex: 1;
+    .dialog-message {
       font-size: 15px;
       line-height: 1.6;
-      color: $text-primary;
-      padding-top: 8px;
+      color: $text-secondary;
+      margin: 0;
+      padding: 0 20px;
     }
   }
 }
