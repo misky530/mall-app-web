@@ -24,14 +24,21 @@ const fetchPendingOrders = () => {
       if (key && key.startsWith('order_')) {
         const orderData = localStorage.getItem(key)
         if (orderData) {
-          const order = JSON.parse(orderData)
-          // status: 0 表示"待确认收款" (Paid_Pending_Verify)
-          if (order.status === 0) {
-            orders.push(order)
+          try {
+            const order = JSON.parse(orderData)
+            console.log('Order found:', order.orderSn, 'Status:', order.status)
+            // status: 0 表示"待确认收款" (Paid_Pending_Verify)
+            if (order.status === 0) {
+              orders.push(order)
+            }
+          } catch (e) {
+            console.error('Failed to parse order:', key, e)
           }
         }
       }
     }
+
+    console.log('Pending orders count:', orders.length)
 
     // 按提交时间降序排序
     orderList.value = orders.sort((a, b) => {

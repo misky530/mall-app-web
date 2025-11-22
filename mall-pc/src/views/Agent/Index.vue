@@ -1,13 +1,12 @@
 <script setup>
-import { ref } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
-import { Wallet, Document, Scale, Money } from '@element-plus/icons-vue'
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { Wallet, Scale, Money } from '@element-plus/icons-vue'
 
 const router = useRouter()
-const route = useRoute()
 
 // 导航菜单
-const menuItems = [
+const menuItems = ref([
   {
     path: '/agent/pending-verify',
     icon: Wallet,
@@ -26,7 +25,7 @@ const menuItems = [
     label: '待结算订单',
     badge: 0
   }
-]
+])
 
 // 统计各状态订单数量
 const loadBadges = () => {
@@ -39,24 +38,30 @@ const loadBadges = () => {
     if (key && key.startsWith('order_')) {
       const orderData = localStorage.getItem(key)
       if (orderData) {
-        const order = JSON.parse(orderData)
-        if (order.status === 0) pendingVerify++
-        if (order.status === -2) arbitration++
-        if (order.status === 3) settlement++
+        try {
+          const order = JSON.parse(orderData)
+          if (order.status === 0) pendingVerify++
+          if (order.status === -2) arbitration++
+          if (order.status === 3) settlement++
+        } catch (e) {
+          console.error('Parse order error:', e)
+        }
       }
     }
   }
 
-  menuItems[0].badge = pendingVerify
-  menuItems[1].badge = arbitration
-  menuItems[2].badge = settlement
+  menuItems.value[0].badge = pendingVerify
+  menuItems.value[1].badge = arbitration
+  menuItems.value[2].badge = settlement
 }
-
-loadBadges()
 
 const handleMenuClick = (path) => {
   router.push(path)
 }
+
+onMounted(() => {
+  loadBadges()
+})
 </script>
 
 <template>
