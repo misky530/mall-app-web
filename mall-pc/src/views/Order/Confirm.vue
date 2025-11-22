@@ -3,7 +3,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCartStore } from '@/stores/cart'
 import { useUserStore } from '@/stores/user'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage } from 'element-plus'
 import { Location, Checked } from '@element-plus/icons-vue'
 
 const router = useRouter()
@@ -97,40 +97,27 @@ const handleSubmitOrder = async () => {
     return
   }
 
-  ElMessageBox.confirm(
-    `确认提交订单？应付金额：¥${orderTotal.value.toFixed(2)}`,
-    '确认订单',
-    {
-      confirmButtonText: '确认支付',
-      cancelButtonText: '取消',
-      type: 'warning'
-    }
-  )
-    .then(async () => {
-      submitting.value = true
-      try {
-        // 模拟提交订单
-        await new Promise(resolve => setTimeout(resolve, 1000))
+  // 直接提交订单，不需要二次确认（因为是B2B线下汇款流程）
+  submitting.value = true
+  try {
+    // 模拟提交订单
+    await new Promise(resolve => setTimeout(resolve, 1000))
 
-        // 创建订单成功
-        const orderId = Date.now()
-        ElMessage.success('订单创建成功')
+    // 创建订单成功
+    const orderId = Date.now()
+    ElMessage.success('订单创建成功，请上传付款凭证')
 
-        // 清空购物车选中项
-        // 这里应该调用 API 清空已下单商品
+    // 清空购物车选中项
+    // 这里应该调用 API 清空已下单商品
 
-        // 跳转到支付页面
-        router.push(`/order/pay/${orderId}`)
-      } catch (error) {
-        console.error('提交订单失败：', error)
-        ElMessage.error('提交订单失败，请重试')
-      } finally {
-        submitting.value = false
-      }
-    })
-    .catch(() => {
-      ElMessage.info('已取消')
-    })
+    // 跳转到支付页面（B2B线下汇款 - 上传付款凭证）
+    router.push(`/order/pay/${orderId}`)
+  } catch (error) {
+    console.error('提交订单失败：', error)
+    ElMessage.error('提交订单失败，请重试')
+  } finally {
+    submitting.value = false
+  }
 }
 
 // 图片加载错误处理
