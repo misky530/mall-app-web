@@ -48,8 +48,15 @@ const handleImageError = (e) => {
 const handleAddToCart = () => {
   cartStore.addItem({
     productId: props.product.id,
-    quantity: 1
-    // skuId: '...' // 如果有规格，需要传入规格ID
+    skuId: props.product.skuId || props.product.id,
+    quantity: 1,
+    // 添加完整的商品信息
+    productName: props.product.name,
+    name: props.product.name,
+    productPic: props.product.pic,
+    pic: props.product.pic,
+    price: props.product.price,
+    productSku: props.product.subTitle || ''
   })
 }
 </script>
