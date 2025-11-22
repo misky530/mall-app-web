@@ -75,6 +75,23 @@ export default [
         }
       },
       {
+        path: 'order/pay/:id',
+        name: 'OrderPay',
+        component: () => import('@/views/Order/Pay.vue'),
+        meta: {
+          title: '支付订单',
+          requiresAuth: true
+        }
+      },
+      {
+        path: 'order/pay/success',
+        name: 'PaySuccess',
+        component: () => import('@/views/Order/PaySuccess.vue'),
+        meta: {
+          title: '支付成功'
+        }
+      },
+      {
         path: 'user/profile',
         name: 'UserProfile',
         component: () => import('@/views/User/Profile.vue'),
