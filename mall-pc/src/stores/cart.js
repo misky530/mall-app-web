@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import * as cartApi from '@/api/cart'
 import { ElMessage } from 'element-plus'
+import { enrichOrderItems } from '@/utils/productApi'
 
 const CART_STORAGE_KEY = 'mall_cart_list'
 const CART_SELECTED_KEY = 'mall_cart_selected'
@@ -40,13 +41,15 @@ export const useCartStore = defineStore('cart', {
 
   actions: {
     // 从本地存储加载购物车
-    loadFromLocalStorage() {
+    async loadFromLocalStorage() {
       try {
         const cartData = localStorage.getItem(CART_STORAGE_KEY)
         const selectedData = localStorage.getItem(CART_SELECTED_KEY)
 
         if (cartData) {
-          this.cartList = JSON.parse(cartData)
+          const cartItems = JSON.parse(cartData)
+          // 从API获取最新的商品信息（图片、价格等）
+          this.cartList = await enrichOrderItems(cartItems)
         } else {
           this.cartList = []
         }
@@ -78,7 +81,7 @@ export const useCartStore = defineStore('cart', {
     async fetchCart() {
       // 在线API需要认证，使用本地存储模式
       if (this.useLocalStorage) {
-        this.loadFromLocalStorage()
+        await this.loadFromLocalStorage()
         return
       }
 
@@ -94,7 +97,7 @@ export const useCartStore = defineStore('cart', {
       } catch (error) {
         console.error('获取购物车列表失败，使用本地存储', error)
         this.useLocalStorage = true
-        this.loadFromLocalStorage()
+        await this.loadFromLocalStorage()
       }
     },
 
@@ -133,8 +136,10 @@ export const useCartStore = defineStore('cart', {
         this.cartList.push({
           id: Date.now() + Math.random(), // 确保唯一ID
           productId: productData.productId,
-          productName: productData.productName || '商品',
-          productPic: productData.productPic || '',
+          productName: productData.productName || productData.name || '商品',
+          productPic: productData.productPic || productData.pic || '',
+          pic: productData.pic || productData.productPic || '',
+          name: productData.name || productData.productName || '商品',
           price: productData.price || 0,
           quantity: productData.quantity || 1,
           productSku: productData.productSku || ''
