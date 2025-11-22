@@ -3,17 +3,24 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { Search, Delete } from '@element-plus/icons-vue'
+import {
+  ORDER_STATUS,
+  ORDER_STATUS_NAME,
+  getOrderStatusName,
+  getOrderStatusTagType
+} from '@/utils/orderStatus'
 
 const router = useRouter()
 
-// 订单状态标签
+// 订单状态标签（B2B）
 const orderStatusTabs = [
   { label: '全部订单', value: '' },
-  { label: '待付款', value: 0 },
-  { label: '待发货', value: 1 },
-  { label: '待收货', value: 2 },
-  { label: '待评价', value: 3 },
-  { label: '已完成', value: 4 }
+  { label: '待付款', value: ORDER_STATUS.CREATED },
+  { label: '待确认收款', value: ORDER_STATUS.PAID_PENDING_VERIFY },
+  { label: '待发货', value: ORDER_STATUS.PROCESSING },
+  { label: '待验收', value: ORDER_STATUS.SHIPPED },
+  { label: '待结算', value: ORDER_STATUS.COMPLETED },
+  { label: '已结算', value: ORDER_STATUS.SETTLED }
 ]
 
 // 当前激活的标签
@@ -90,8 +97,13 @@ const loadOrdersFromLocalStorage = () => {
 
 // 生成 Mock 订单数据（用于演示，当没有真实订单时）
 const generateMockOrders = () => {
-  const statusList = [0, 1, 2, 3, 4]
-  const statusNames = ['待付款', '待发货', '待收货', '待评价', '已完成']
+  const statusList = [
+    ORDER_STATUS.CREATED,
+    ORDER_STATUS.PAID_PENDING_VERIFY,
+    ORDER_STATUS.PROCESSING,
+    ORDER_STATUS.SHIPPED,
+    ORDER_STATUS.COMPLETED
+  ]
 
   return Array.from({ length: 3 }, (_, index) => {
     const status = statusList[index % statusList.length]
@@ -102,7 +114,7 @@ const generateMockOrders = () => {
       id: orderId,
       orderSn: `DEMO${orderId}`,
       status,
-      statusName: statusNames[status],
+      statusName: getOrderStatusName(status),
       createTime,
       totalAmount: 299.00 + index * 100,
       payAmount: 299.00 + index * 100,
@@ -148,24 +160,19 @@ const handlePayOrder = (order) => {
   router.push(`/order/pay/${order.id}`)
 }
 
-// 确认收货
-const handleConfirmReceipt = (order) => {
-  ElMessage.info('确认收货功能待开发')
+// 去验收
+const handleInspect = (order) => {
+  router.push(`/order/inspect/${order.id}`)
+}
+
+// 查看物流
+const handleViewLogistics = (order) => {
+  router.push(`/order/detail/${order.id}`)
 }
 
 // 申请售后
 const handleAfterSale = (order) => {
   ElMessage.info('售后功能待开发')
-}
-
-// 评价
-const handleEvaluate = (order) => {
-  ElMessage.info('评价功能待开发')
-}
-
-// 再次购买
-const handleBuyAgain = (order) => {
-  ElMessage.info('再次购买功能待开发')
 }
 
 // 图片加载错误处理
@@ -184,29 +191,36 @@ const handleImageError = (e) => {
   }
 }
 
-// 获取订单操作按钮
+// 获取订单操作按钮（B2B）
 const getOrderActions = (order) => {
   const actions = []
 
   switch (order.status) {
-    case 0: // 待付款
+    case ORDER_STATUS.CREATED: // 待付款
       actions.push({ label: '去支付', type: 'primary', handler: handlePayOrder })
       actions.push({ label: '取消订单', type: 'info', handler: handleCancelOrder })
       break
-    case 1: // 待发货
+    case ORDER_STATUS.PAID_PENDING_VERIFY: // 待确认收款
       actions.push({ label: '查看详情', type: 'primary', handler: goToDetail })
       break
-    case 2: // 待收货
-      actions.push({ label: '确认收货', type: 'primary', handler: handleConfirmReceipt })
-      actions.push({ label: '查看物流', type: 'info', handler: goToDetail })
+    case ORDER_STATUS.PROCESSING: // 待发货
+      actions.push({ label: '查看详情', type: 'primary', handler: goToDetail })
       break
-    case 3: // 待评价
-      actions.push({ label: '去评价', type: 'primary', handler: handleEvaluate })
-      actions.push({ label: '查看详情', type: 'info', handler: goToDetail })
+    case ORDER_STATUS.SHIPPED: // 待验收
+      actions.push({ label: '去验收', type: 'primary', handler: handleInspect })
+      actions.push({ label: '查看物流', type: 'info', handler: handleViewLogistics })
       break
-    case 4: // 已完成
-      actions.push({ label: '再次购买', type: 'primary', handler: handleBuyAgain })
-      actions.push({ label: '申请售后', type: 'info', handler: handleAfterSale })
+    case ORDER_STATUS.COMPLETED: // 待结算
+      actions.push({ label: '查看详情', type: 'primary', handler: goToDetail })
+      break
+    case ORDER_STATUS.SETTLED: // 已结算
+      actions.push({ label: '查看详情', type: 'primary', handler: goToDetail })
+      break
+    case ORDER_STATUS.INSPECTION_FAIL: // 验收不通过
+      actions.push({ label: '查看详情', type: 'primary', handler: goToDetail })
+      break
+    case ORDER_STATUS.REFUNDED: // 已退款
+      actions.push({ label: '查看详情', type: 'primary', handler: goToDetail })
       break
   }
 
@@ -265,7 +279,7 @@ onMounted(() => {
                   <span class="order-time">{{ order.createTime }}</span>
                 </div>
                 <div class="order-status">
-                  <el-tag :type="order.status === 0 ? 'danger' : 'success'">
+                  <el-tag :type="getOrderStatusTagType(order.status)">
                     {{ order.statusName }}
                   </el-tag>
                 </div>

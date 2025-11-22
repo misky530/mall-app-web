@@ -92,6 +92,15 @@ export default [
         }
       },
       {
+        path: 'order/inspect/:id',
+        name: 'OrderInspect',
+        component: () => import('@/views/Order/Acceptance.vue'),
+        meta: {
+          title: '商品验收',
+          requiresAuth: true
+        }
+      },
+      {
         path: 'user/profile',
         name: 'UserProfile',
         component: () => import('@/views/User/Profile.vue'),
@@ -124,6 +133,47 @@ export default [
         component: () => import('@/views/User/History.vue'),
         meta: {
           title: '浏览历史',
+          requiresAuth: true
+        }
+      }
+    ]
+  },
+  // 卖家端路由
+  {
+    path: '/seller',
+    component: () => import('@/components/Layout/MainLayout.vue'),
+    children: [
+      {
+        path: 'order/list',
+        name: 'SellerOrderList',
+        component: () => import('@/views/Seller/OrderList.vue'),
+        meta: {
+          title: '订单管理',
+          requiresAuth: true
+        }
+      },
+      {
+        path: 'order/ship/:id',
+        name: 'SellerShipOrder',
+        component: () => import('@/views/Seller/ShipOrder.vue'),
+        meta: {
+          title: '发货',
+          requiresAuth: true
+        }
+      }
+    ]
+  },
+  // 经办人端路由
+  {
+    path: '/agent',
+    component: () => import('@/components/Layout/MainLayout.vue'),
+    children: [
+      {
+        path: 'payment/verify',
+        name: 'AgentPaymentVerify',
+        component: () => import('@/views/Agent/PaymentVerify.vue'),
+        meta: {
+          title: '财务审核 - 待确认收款',
           requiresAuth: true
         }
       }

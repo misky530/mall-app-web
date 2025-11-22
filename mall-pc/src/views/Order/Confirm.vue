@@ -18,6 +18,15 @@ const selectedAddress = ref(null)
 const showAddressDialog = ref(false)
 // 备注
 const remark = ref('')
+// 发票信息
+const invoiceInfo = ref({
+  type: '', // 发票类型：personal(个人), company(企业)
+  title: '', // 发票抬头
+  taxNumber: '', // 纳税人识别号（企业必填）
+  content: '' // 发票内容
+})
+// 是否显示发票对话框
+const showInvoiceDialog = ref(false)
 // 提交中
 const submitting = ref(false)
 
@@ -83,6 +92,24 @@ const handleSelectAddress = (address) => {
 const handleAddAddress = () => {
   ElMessage.info('新增地址功能待开发')
   showAddressDialog.value = false
+}
+
+// 保存发票信息
+const handleSaveInvoice = () => {
+  if (!invoiceInfo.value.type) {
+    ElMessage.warning('请选择发票类型')
+    return
+  }
+  if (!invoiceInfo.value.title) {
+    ElMessage.warning('请输入发票抬头')
+    return
+  }
+  if (invoiceInfo.value.type === 'company' && !invoiceInfo.value.taxNumber) {
+    ElMessage.warning('请输入纳税人识别号')
+    return
+  }
+  showInvoiceDialog.value = false
+  ElMessage.success('发票信息已保存')
 }
 
 // 提交订单
@@ -247,6 +274,37 @@ onMounted(() => {
           </div>
         </div>
 
+        <!-- 发票信息 -->
+        <div class="section invoice-section">
+          <div class="section-title">
+            <span>发票信息</span>
+          </div>
+          <div v-if="invoiceInfo.type" class="invoice-info">
+            <div class="invoice-row">
+              <span class="label">发票类型：</span>
+              <span class="value">{{ invoiceInfo.type === 'personal' ? '个人' : '企业' }}</span>
+            </div>
+            <div class="invoice-row">
+              <span class="label">发票抬头：</span>
+              <span class="value">{{ invoiceInfo.title }}</span>
+            </div>
+            <div v-if="invoiceInfo.type === 'company'" class="invoice-row">
+              <span class="label">纳税人识别号：</span>
+              <span class="value">{{ invoiceInfo.taxNumber }}</span>
+            </div>
+            <div class="invoice-row">
+              <span class="label">发票内容：</span>
+              <span class="value">{{ invoiceInfo.content || '商品明细' }}</span>
+            </div>
+          </div>
+          <el-button v-else type="primary" link @click="showInvoiceDialog = true">
+            填写发票信息
+          </el-button>
+          <el-button v-if="invoiceInfo.type" link @click="showInvoiceDialog = true">
+            修改发票信息
+          </el-button>
+        </div>
+
         <!-- 备注 -->
         <div class="section remark-section">
           <div class="section-title">
@@ -335,6 +393,57 @@ onMounted(() => {
           新增地址
         </el-button>
       </div>
+    </el-dialog>
+
+    <!-- 发票信息对话框 -->
+    <el-dialog
+      v-model="showInvoiceDialog"
+      title="填写发票信息"
+      width="600px"
+    >
+      <el-form :model="invoiceInfo" label-width="120px">
+        <el-form-item label="发票类型" required>
+          <el-radio-group v-model="invoiceInfo.type">
+            <el-radio label="personal">个人</el-radio>
+            <el-radio label="company">企业</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="发票抬头" required>
+          <el-input
+            v-model="invoiceInfo.title"
+            placeholder="请输入发票抬头"
+            maxlength="100"
+          />
+        </el-form-item>
+        <el-form-item
+          v-if="invoiceInfo.type === 'company'"
+          label="纳税人识别号"
+          required
+        >
+          <el-input
+            v-model="invoiceInfo.taxNumber"
+            placeholder="请输入纳税人识别号"
+            maxlength="30"
+          />
+        </el-form-item>
+        <el-form-item label="发票内容">
+          <el-select v-model="invoiceInfo.content" placeholder="请选择发票内容">
+            <el-option label="商品明细" value="商品明细" />
+            <el-option label="办公用品" value="办公用品" />
+            <el-option label="食品" value="食品" />
+            <el-option label="其他" value="其他" />
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="showInvoiceDialog = false">取消</el-button>
+        <el-button
+          type="primary"
+          @click="handleSaveInvoice"
+        >
+          确定
+        </el-button>
+      </template>
     </el-dialog>
   </div>
 </template>
@@ -498,6 +607,35 @@ onMounted(() => {
               font-weight: 500;
               color: $primary-color;
             }
+          }
+        }
+      }
+    }
+
+    // 发票信息
+    .invoice-section {
+      .invoice-info {
+        padding: 16px;
+        background: #f8f9fa;
+        border-radius: $border-radius-small;
+
+        .invoice-row {
+          display: flex;
+          margin-bottom: 12px;
+          font-size: 14px;
+
+          &:last-child {
+            margin-bottom: 0;
+          }
+
+          .label {
+            color: $text-secondary;
+            min-width: 120px;
+          }
+
+          .value {
+            color: $text-primary;
+            flex: 1;
           }
         }
       }
