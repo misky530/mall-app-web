@@ -22,86 +22,94 @@ const fetchOrderDetail = async () => {
     // 模拟 API 调用
     await new Promise(resolve => setTimeout(resolve, 500))
 
-    // Mock 订单详情数据
-    orderDetail.value = {
-      id: orderId,
-      orderSn: `ORD${orderId}`,
-      status: 2, // 0:待付款 1:待发货 2:待收货 3:待评价 4:已完成
-      statusName: '待收货',
-      createTime: '2024-01-20 14:30:25',
-      payTime: '2024-01-20 14:32:10',
-      deliveryTime: '2024-01-21 10:20:00',
-      receiveTime: null,
-      totalAmount: 627.00,
-      freightAmount: 10.00,
-      payAmount: 637.00,
-      payType: 1, // 1:支付宝 2:微信
-      payTypeName: '支付宝',
-      remark: '请尽快发货，谢谢',
+    // 尝试从localStorage读取订单数据
+    const savedOrder = localStorage.getItem(`order_${orderId}`)
 
-      // 收货地址
-      receiverName: '张三',
-      receiverPhone: '13800138000',
-      receiverProvince: '广东省',
-      receiverCity: '深圳市',
-      receiverRegion: '南山区',
-      receiverDetailAddress: '科技园南区XX路XX号',
+    if (savedOrder) {
+      // 使用实际的订单数据
+      orderDetail.value = JSON.parse(savedOrder)
+    } else {
+      // 如果没有找到订单数据，显示Mock数据（用于演示）
+      orderDetail.value = {
+        id: orderId,
+        orderSn: `ORD${orderId}`,
+        status: 2, // 0:待付款 1:待发货 2:待收货 3:待评价 4:已完成
+        statusName: '待收货',
+        createTime: '2024-01-20 14:30:25',
+        payTime: '2024-01-20 14:32:10',
+        deliveryTime: '2024-01-21 10:20:00',
+        receiveTime: null,
+        totalAmount: 627.00,
+        freightAmount: 10.00,
+        payAmount: 637.00,
+        payType: 1, // 1:支付宝 2:微信
+        payTypeName: '支付宝',
+        remark: '请尽快发货，谢谢',
 
-      // 物流信息
-      deliveryCompany: '顺丰速运',
-      deliverySn: 'SF1234567890',
-      logisticsStatus: '运输中',
+        // 收货地址
+        receiverName: '张三',
+        receiverPhone: '13800138000',
+        receiverProvince: '广东省',
+        receiverCity: '深圳市',
+        receiverRegion: '南山区',
+        receiverDetailAddress: '科技园南区XX路XX号',
 
-      // 商品列表
-      items: [
-        {
-          id: 1,
-          productId: 1,
-          productName: '时尚男士T恤 夏季新款',
-          productPic: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=300&h=300&fit=crop',
-          price: 129.00,
-          quantity: 2,
-          productSku: '颜色:白色 尺码:L'
-        },
-        {
-          id: 2,
-          productId: 2,
-          productName: '无线蓝牙耳机 降噪版',
-          productPic: 'https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=300&h=300&fit=crop',
-          price: 299.00,
-          quantity: 1,
-          productSku: '颜色:黑色'
-        },
-        {
-          id: 3,
-          productId: 3,
-          productName: '智能手环 运动手表',
-          productPic: 'https://images.unsplash.com/photo-1575311373937-040b8e1fd5b6?w=300&h=300&fit=crop',
-          price: 199.00,
-          quantity: 1,
-          productSku: '颜色:蓝色'
-        }
-      ],
+        // 物流信息
+        deliveryCompany: '顺丰速运',
+        deliverySn: 'SF1234567890',
+        logisticsStatus: '运输中',
 
-      // 物流跟踪
-      logisticsTrace: [
-        {
-          time: '2024-01-21 15:30:00',
-          content: '【深圳市】快件已到达 深圳南山营业点'
-        },
-        {
-          time: '2024-01-21 12:20:00',
-          content: '【深圳市】快件已发车'
-        },
-        {
-          time: '2024-01-21 10:20:00',
-          content: '【深圳市】您的快件已打包完成'
-        },
-        {
-          time: '2024-01-21 09:00:00',
-          content: '【深圳市】卖家已发货'
-        }
-      ]
+        // 商品列表
+        items: [
+          {
+            id: 1,
+            productId: 1,
+            productName: '时尚男士T恤 夏季新款',
+            productPic: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=300&h=300&fit=crop',
+            price: 129.00,
+            quantity: 2,
+            productSku: '颜色:白色 尺码:L'
+          },
+          {
+            id: 2,
+            productId: 2,
+            productName: '无线蓝牙耳机 降噪版',
+            productPic: 'https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=300&h=300&fit=crop',
+            price: 299.00,
+            quantity: 1,
+            productSku: '颜色:黑色'
+          },
+          {
+            id: 3,
+            productId: 3,
+            productName: '智能手环 运动手表',
+            productPic: 'https://images.unsplash.com/photo-1575311373937-040b8e1fd5b6?w=300&h=300&fit=crop',
+            price: 199.00,
+            quantity: 1,
+            productSku: '颜色:蓝色'
+          }
+        ],
+
+        // 物流跟踪
+        logisticsTrace: [
+          {
+            time: '2024-01-21 15:30:00',
+            content: '【深圳市】快件已到达 深圳南山营业点'
+          },
+          {
+            time: '2024-01-21 12:20:00',
+            content: '【深圳市】快件已发车'
+          },
+          {
+            time: '2024-01-21 10:20:00',
+            content: '【深圳市】您的快件已打包完成'
+          },
+          {
+            time: '2024-01-21 09:00:00',
+            content: '【深圳市】卖家已发货'
+          }
+        ]
+      }
     }
   } catch (error) {
     console.error('获取订单详情失败：', error)

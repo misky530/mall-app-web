@@ -52,6 +52,34 @@ const handlePay = async () => {
     // 在线API需要认证，这里模拟支付成功
     // 真实场景应该调用 payOrderSuccess API 或跳转到支付宝
 
+    // 保存订单信息到localStorage，以便订单详情页使用
+    const orderData = {
+      id: orderId.value,
+      orderSn: orderInfo.value.orderSn,
+      status: 1, // 1: 待发货
+      statusName: '待发货',
+      createTime: new Date(parseInt(orderId.value)).toLocaleString('zh-CN'),
+      payTime: new Date().toLocaleString('zh-CN'),
+      totalAmount: orderInfo.value.totalAmount - (orderInfo.value.totalAmount >= 99 ? 0 : 10),
+      freightAmount: orderInfo.value.totalAmount >= 99 ? 0 : 10,
+      payAmount: orderInfo.value.payAmount,
+      payType: payType.value,
+      payTypeName: payType.value === 1 ? '支付宝' : '微信支付',
+      receiverName: '张三',
+      receiverPhone: '13800138000',
+      receiverProvince: '广东省',
+      receiverCity: '深圳市',
+      receiverRegion: '南山区',
+      receiverDetailAddress: '科技园南区XX路XX号',
+      items: orderInfo.value.items.map(item => ({
+        ...item,
+        productPic: item.productPic || item.pic
+      }))
+    }
+
+    // 存储订单数据
+    localStorage.setItem(`order_${orderId.value}`, JSON.stringify(orderData))
+
     ElMessage.success('支付成功')
 
     // 清空购物车中已下单的商品
