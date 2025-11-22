@@ -2,7 +2,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Upload, Delete, Document, BankCard, Plus } from '@element-plus/icons-vue'
+import { Upload, Document, Plus } from '@element-plus/icons-vue'
 import { ORDER_STATUS, getOrderStatusName } from '@/utils/orderStatus'
 
 const route = useRoute()
@@ -36,33 +36,24 @@ const submitting = ref(false)
 const fetchOrderDetail = async () => {
   try {
     // 模拟API调用
-    await new Promise(resolve => setTimeout(resolve, 500))
+    await new Promise(resolve => setTimeout(resolve, 300))
 
     // 从localStorage获取订单数据
     const savedOrder = localStorage.getItem(`order_${orderId.value}`)
     if (savedOrder) {
-      orderInfo.value = JSON.parse(savedOrder)
+      const orderData = JSON.parse(savedOrder)
+      // 确保状态字段正确
+      orderData.status = orderData.status || ORDER_STATUS.CREATED
+      orderData.statusName = orderData.statusName || getOrderStatusName(ORDER_STATUS.CREATED)
+      orderInfo.value = orderData
+      console.log('订单信息加载成功:', orderInfo.value)
     } else {
-      // Mock数据
-      orderInfo.value = {
-        id: orderId.value,
-        orderSn: `ORDER${orderId.value}`,
-        status: ORDER_STATUS.CREATED,
-        statusName: getOrderStatusName(ORDER_STATUS.CREATED),
-        totalAmount: 1000.00,
-        freightAmount: 10.00,
-        payAmount: 1010.00,
-        createTime: new Date().toLocaleString('zh-CN'),
-        items: [
-          {
-            id: 1,
-            productName: '示例商品',
-            productPic: 'https://via.placeholder.com/80',
-            price: 1000.00,
-            quantity: 1
-          }
-        ]
-      }
+      // 如果没有找到订单，提示并返回
+      ElMessage.warning('订单不存在，请重新下单')
+      setTimeout(() => {
+        router.push('/order/list')
+      }, 1500)
+      return
     }
   } catch (error) {
     console.error('获取订单详情失败：', error)
@@ -78,6 +69,9 @@ const fetchPaymentAccount = async () => {
     // 实际应该从API获取
     // const res = await getPaymentAccount()
     // paymentAccount.value = res.data
+    
+    // Mock数据已初始化，这里可以保持默认值或从API更新
+    // paymentAccount.value 已经有初始值，所以会正常显示
   } catch (error) {
     console.error('获取收款账户信息失败：', error)
   }
@@ -87,18 +81,31 @@ const fetchPaymentAccount = async () => {
 const handleUploadVoucher = (file) => {
   uploading.value = true
 
-  // 模拟上传
+  // 模拟上传（演示用，不需要真正上传）
   setTimeout(() => {
-    const fileUrl = URL.createObjectURL(file.raw)
-    paymentVouchers.value.push({
-      uid: Date.now(),
-      name: file.name,
-      url: fileUrl,
-      raw: file.raw
-    })
-    uploading.value = false
-    ElMessage.success('上传成功')
-  }, 1000)
+    try {
+      const fileObj = file.raw || file
+      const fileUrl = fileObj ? URL.createObjectURL(fileObj) : 'https://via.placeholder.com/200?text=付款凭证'
+      const uid = Date.now() + Math.random()
+      
+      const voucherItem = {
+        uid: uid,
+        name: file.name || '付款凭证.jpg',
+        url: fileUrl,
+        raw: fileObj
+      }
+      
+      paymentVouchers.value.push(voucherItem)
+      uploading.value = false
+      ElMessage.success('上传成功')
+      console.log('凭证已添加，当前凭证数量:', paymentVouchers.value.length)
+      console.log('凭证列表:', paymentVouchers.value)
+    } catch (error) {
+      console.error('上传处理错误:', error)
+      uploading.value = false
+      ElMessage.error('上传失败，请重试')
+    }
+  }, 300) // 缩短等待时间，提升体验
 
   return false // 阻止自动上传
 }
@@ -180,17 +187,22 @@ onMounted(() => {
 <template>
   <div class="pay-page">
     <div class="container">
-      <!-- 支付金额 -->
-      <div class="amount-section">
-        <div class="amount-label">应付金额</div>
-        <div class="amount-price">¥{{ orderInfo?.payAmount?.toFixed(2) || '0.00' }}</div>
-        <div class="amount-desc">订单号：{{ orderInfo?.orderSn }}</div>
+      <div v-if="!orderInfo" v-loading="true" style="min-height: 400px;">
+        <el-empty description="正在加载订单信息..." />
       </div>
+
+      <div v-else>
+        <!-- 支付金额 -->
+        <div class="amount-section">
+          <div class="amount-label">应付金额</div>
+          <div class="amount-price">¥{{ orderInfo?.payAmount?.toFixed(2) || '0.00' }}</div>
+          <div class="amount-desc">订单号：{{ orderInfo?.orderSn }}</div>
+        </div>
 
       <!-- 支付方式说明 -->
       <div class="payment-method-section">
         <div class="section-title">
-          <el-icon><BankCard /></el-icon>
+          <el-icon><Document /></el-icon>
           <span>支付方式：线下对公转账/银行转账</span>
         </div>
         <div class="payment-notice">
@@ -272,7 +284,7 @@ onMounted(() => {
         </div>
         <div class="voucher-upload">
           <el-upload
-            :file-list="paymentVouchers"
+            v-model:file-list="paymentVouchers"
             :on-preview="() => {}"
             :on-remove="handleRemoveVoucher"
             :before-upload="handleUploadVoucher"
@@ -280,6 +292,7 @@ onMounted(() => {
             accept="image/*,.pdf"
             list-type="picture-card"
             :disabled="uploading"
+            :auto-upload="false"
           >
             <el-icon v-if="!uploading" class="upload-icon"><Plus /></el-icon>
             <div v-else class="uploading-text">上传中...</div>
@@ -297,14 +310,20 @@ onMounted(() => {
           type="primary"
           size="large"
           :loading="submitting"
-          :disabled="paymentVouchers.length === 0"
+          :disabled="paymentVouchers.length === 0 || uploading"
           @click="handleSubmitPayment"
         >
           {{ submitting ? '提交中...' : '我已付款，提交凭证' }}
         </el-button>
         <div class="submit-tips">
-          <p>提交凭证后，请耐心等待经办人确认收款（通常1-2个工作日）</p>
+          <p v-if="paymentVouchers.length === 0" style="color: #f56c6c; margin-top: 8px;">
+            ⚠️ 请先上传付款凭证
+          </p>
+          <p v-else>
+            提交凭证后，请耐心等待经办人确认收款（通常1-2个工作日）
+          </p>
         </div>
+      </div>
       </div>
     </div>
   </div>
@@ -341,12 +360,6 @@ onMounted(() => {
       font-weight: bold;
       color: $primary-color;
       margin-bottom: 12px;
-
-      &::before {
-        content: '¥';
-        font-size: 32px;
-        margin-right: 4px;
-      }
     }
 
     .amount-desc {

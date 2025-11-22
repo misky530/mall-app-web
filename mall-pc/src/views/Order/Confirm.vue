@@ -141,13 +141,46 @@ const handleSubmitOrder = async () => {
 
         // 创建订单成功
         const orderId = Date.now()
+        
+        // 构建订单数据
+        const orderData = {
+          id: orderId.toString(),
+          orderSn: `ORD${orderId}`,
+          status: 'CREATED',
+          statusName: '待付款',
+          createTime: new Date().toLocaleString('zh-CN'),
+          totalAmount: goodsTotal.value,
+          freightAmount: freight.value,
+          payAmount: orderTotal.value,
+          remark: remark.value,
+          invoiceInfo: invoiceInfo.value.type ? { ...invoiceInfo.value } : null,
+          receiverName: selectedAddress.value.name,
+          receiverPhone: selectedAddress.value.phone,
+          receiverProvince: selectedAddress.value.province,
+          receiverCity: selectedAddress.value.city,
+          receiverRegion: selectedAddress.value.region,
+          receiverDetailAddress: selectedAddress.value.detailAddress,
+          items: selectedItems.value.map(item => ({
+            id: item.id,
+            productId: item.productId || item.id,
+            productName: item.productName || item.name,
+            productPic: item.productPic || item.pic,
+            price: item.price,
+            quantity: item.quantity,
+            productSku: item.productSku || ''
+          }))
+        }
+
+        // 保存订单数据到localStorage
+        localStorage.setItem(`order_${orderId}`, JSON.stringify(orderData))
+
         ElMessage.success('订单创建成功')
 
         // 清空购物车选中项
         // 这里应该调用 API 清空已下单商品
 
-        // 跳转到支付页面
-        router.push(`/order/pay/${orderId}`)
+        // 跳转到支付页面（使用replace避免返回时回到确认页面）
+        router.replace(`/order/pay/${orderId}`)
       } catch (error) {
         console.error('提交订单失败：', error)
         ElMessage.error('提交订单失败，请重试')

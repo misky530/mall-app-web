@@ -88,7 +88,7 @@ watch(
             <router-link to="/register">注册</router-link>
           </template>
           <el-divider direction="vertical" />
-          <router-link to="/user/orders">我的订单</router-link>
+          <router-link to="/order/list">我的订单</router-link>
         </div>
       </div>
     </div>
