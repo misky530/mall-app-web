@@ -34,14 +34,21 @@ const fetchOrderList = async () => {
     // 模拟 API 调用
     await new Promise(resolve => setTimeout(resolve, 500))
 
-    // Mock 订单数据
-    const mockOrders = generateMockOrders()
+    // 从localStorage获取所有订单
+    const orders = loadOrdersFromLocalStorage()
 
     // 根据状态筛选
-    let filteredOrders = mockOrders
+    let filteredOrders = orders
     if (activeTab.value !== '') {
-      filteredOrders = mockOrders.filter(order => order.status === activeTab.value)
+      filteredOrders = orders.filter(order => order.status === activeTab.value)
     }
+
+    // 按创建时间倒序排列（最新的在前）
+    filteredOrders.sort((a, b) => {
+      const timeA = new Date(a.createTime).getTime()
+      const timeB = new Date(b.createTime).getTime()
+      return timeB - timeA
+    })
 
     orderList.value = filteredOrders
     total.value = filteredOrders.length
@@ -53,19 +60,47 @@ const fetchOrderList = async () => {
   }
 }
 
-// 生成 Mock 订单数据
+// 从localStorage加载所有订单
+const loadOrdersFromLocalStorage = () => {
+  const orders = []
+
+  // 遍历localStorage，找到所有以order_开头的键
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i)
+    if (key && key.startsWith('order_')) {
+      try {
+        const orderData = localStorage.getItem(key)
+        if (orderData) {
+          const order = JSON.parse(orderData)
+          orders.push(order)
+        }
+      } catch (error) {
+        console.error(`解析订单数据失败: ${key}`, error)
+      }
+    }
+  }
+
+  // 如果没有订单，返回一些示例订单供演示
+  if (orders.length === 0) {
+    return generateMockOrders()
+  }
+
+  return orders
+}
+
+// 生成 Mock 订单数据（用于演示，当没有真实订单时）
 const generateMockOrders = () => {
   const statusList = [0, 1, 2, 3, 4]
   const statusNames = ['待付款', '待发货', '待收货', '待评价', '已完成']
 
-  return Array.from({ length: 8 }, (_, index) => {
+  return Array.from({ length: 3 }, (_, index) => {
     const status = statusList[index % statusList.length]
     const orderId = `${Date.now()}${index}`
-    const createTime = new Date(Date.now() - index * 86400000).toLocaleString()
+    const createTime = new Date(Date.now() - index * 86400000).toLocaleString('zh-CN')
 
     return {
       id: orderId,
-      orderSn: `ORD${orderId}`,
+      orderSn: `DEMO${orderId}`,
       status,
       statusName: statusNames[status],
       createTime,
@@ -75,20 +110,11 @@ const generateMockOrders = () => {
         {
           id: index * 10 + 1,
           productId: index + 1,
-          productName: `精选商品 ${index + 1}`,
+          productName: `演示商品 ${index + 1}`,
           productPic: `https://images.unsplash.com/photo-${1500000000000 + index * 100000}?w=300&h=300&fit=crop`,
           price: 299.00,
           quantity: 1,
           productSku: '颜色:黑色'
-        },
-        {
-          id: index * 10 + 2,
-          productId: index + 2,
-          productName: `优选商品 ${index + 2}`,
-          productPic: `https://images.unsplash.com/photo-${1500000000000 + (index + 1) * 100000}?w=300&h=300&fit=crop`,
-          price: 100.00 * index,
-          quantity: 1,
-          productSku: '规格:标准版'
         }
       ]
     }
