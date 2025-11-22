@@ -129,8 +129,8 @@ const handleTabChange = (tabValue) => {
 }
 
 // 查看订单详情
-const goToDetail = (orderId) => {
-  router.push(`/order/detail/${orderId}`)
+const goToDetail = (order) => {
+  router.push(`/order/detail/${order.id}`)
 }
 
 // 取消订单
@@ -188,25 +188,44 @@ const handleImageError = (e) => {
 const getOrderActions = (order) => {
   const actions = []
 
+  // 判断是否为B2B订单
+  const isB2BOrder = order.payType === 3
+
   switch (order.status) {
-    case 0: // 待付款
-      actions.push({ label: '去支付', type: 'primary', handler: handlePayOrder })
-      actions.push({ label: '取消订单', type: 'info', handler: handleCancelOrder })
+    case 0: // 待付款（待确认收款）
+      if (isB2BOrder) {
+        actions.push({ label: '查看详情', type: 'primary', handler: goToDetail })
+      } else {
+        actions.push({ label: '去支付', type: 'primary', handler: handlePayOrder })
+        actions.push({ label: '取消订单', type: 'info', handler: handleCancelOrder })
+      }
       break
     case 1: // 待发货
       actions.push({ label: '查看详情', type: 'primary', handler: goToDetail })
       break
-    case 2: // 待收货
-      actions.push({ label: '确认收货', type: 'primary', handler: handleConfirmReceipt })
-      actions.push({ label: '查看物流', type: 'info', handler: goToDetail })
-      break
-    case 3: // 待评价
-      actions.push({ label: '去评价', type: 'primary', handler: handleEvaluate })
+    case 2: // 已发货（待验收/待收货）
+      if (isB2BOrder) {
+        // B2B订单显示"货物验收"按钮
+        actions.push({ label: '货物验收', type: 'success', handler: goToDetail })
+      } else {
+        // 普通订单显示"确认收货"按钮
+        actions.push({ label: '确认收货', type: 'primary', handler: handleConfirmReceipt })
+      }
       actions.push({ label: '查看详情', type: 'info', handler: goToDetail })
       break
+    case 3: // 待结算/待评价
+      if (isB2BOrder) {
+        actions.push({ label: '查看详情', type: 'primary', handler: goToDetail })
+      } else {
+        actions.push({ label: '去评价', type: 'primary', handler: handleEvaluate })
+        actions.push({ label: '查看详情', type: 'info', handler: goToDetail })
+      }
+      break
     case 4: // 已完成
-      actions.push({ label: '再次购买', type: 'primary', handler: handleBuyAgain })
-      actions.push({ label: '申请售后', type: 'info', handler: handleAfterSale })
+      actions.push({ label: '查看详情', type: 'primary', handler: goToDetail })
+      if (!isB2BOrder) {
+        actions.push({ label: '再次购买', type: 'info', handler: handleBuyAgain })
+      }
       break
   }
 
