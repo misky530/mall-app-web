@@ -492,7 +492,7 @@ onMounted(() => {
 
 // 秒杀区域
 .flash-section {
-  background: linear-gradient(135deg, #ff6b6b 0%, #ff8e53 100%);
+  background: linear-gradient(135deg, #fff5f5 0%, #ffe8e0 100%);
 
   .section-header {
     display: flex;
@@ -503,14 +503,13 @@ onMounted(() => {
       h2 {
         font-size: 32px;
         font-weight: bold;
-        color: white !important;
-        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        color: #ff4757 !important;
         margin-bottom: 8px;
       }
 
       p {
         font-size: 14px;
-        color: rgba(255, 255, 255, 0.95) !important;
+        color: #ff6b6b !important;
       }
     }
 
@@ -520,7 +519,7 @@ onMounted(() => {
       gap: 8px;
 
       .countdown-label {
-        color: rgba(255, 255, 255, 0.95);
+        color: $text-primary;
         font-size: 14px;
       }
 
@@ -530,7 +529,7 @@ onMounted(() => {
         height: 36px;
         line-height: 36px;
         text-align: center;
-        background: rgba(0, 0, 0, 0.3);
+        background: #ff4757;
         color: white;
         border-radius: 4px;
         font-size: 18px;
@@ -538,7 +537,7 @@ onMounted(() => {
       }
 
       .countdown-separator {
-        color: white;
+        color: $text-primary;
         font-size: 18px;
         font-weight: bold;
       }
@@ -548,10 +547,10 @@ onMounted(() => {
   // Override general section-header styles for flash section
   &.product-section .section-header {
     h2 {
-      color: white !important;
+      color: #ff4757 !important;
     }
     p {
-      color: rgba(255, 255, 255, 0.95) !important;
+      color: #ff6b6b !important;
     }
   }
 }
