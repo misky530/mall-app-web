@@ -4,6 +4,9 @@ import { Refresh, Loading } from '@element-plus/icons-vue'
 import CapitalOverview from './components/CapitalOverview.vue'
 import AlertRadar from './components/AlertRadar.vue'
 import TodoList from './components/TodoList.vue'
+import CashflowTrend from './components/CashflowTrend.vue'
+import RiskRanking from './components/RiskRanking.vue'
+import EfficiencyGauge from './components/EfficiencyGauge.vue'
 
 // 当前日期
 const currentDate = ref(new Date().toLocaleDateString('zh-CN', {
@@ -64,13 +67,28 @@ onMounted(() => {
         </div>
       </div>
 
-      <!-- P1 功能区域（占位，后续实现） -->
-      <div class="p1-placeholder">
-        <el-empty description="更多报表功能开发中...">
-          <template #image>
-            <div style="font-size: 64px;">📊</div>
-          </template>
-        </el-empty>
+      <!-- P1-1: 资金流入流出趋势图 -->
+      <CashflowTrend />
+
+      <!-- P1 双栏布局 -->
+      <div class="p1-dashboard">
+        <div class="dashboard-left">
+          <!-- P1-2: 订单风险评分TOP 10 -->
+          <RiskRanking />
+        </div>
+        <div class="dashboard-right">
+          <!-- P1-3: 操作及时率仪表盘 -->
+          <EfficiencyGauge />
+        </div>
+      </div>
+
+      <!-- P2 功能区域（占位，后续实现） -->
+      <div class="p2-placeholder">
+        <div class="placeholder-content">
+          <div class="icon">📈</div>
+          <h3>更多高级分析功能</h3>
+          <p>时段热力分布、效能成本分析、商业洞察看板等功能开发中...</p>
+        </div>
       </div>
     </div>
   </div>
@@ -166,11 +184,43 @@ onMounted(() => {
     }
   }
 
-  .p1-placeholder {
-    background: white;
+  .p1-dashboard {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 24px;
+
+    .dashboard-left,
+    .dashboard-right {
+      min-height: 400px;
+    }
+  }
+
+  .p2-placeholder {
+    background: linear-gradient(135deg, #f9fafb 0%, #f0f2f5 100%);
     border-radius: 12px;
     padding: 60px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    text-align: center;
+
+    .placeholder-content {
+      .icon {
+        font-size: 64px;
+        margin-bottom: 16px;
+      }
+
+      h3 {
+        font-size: 20px;
+        color: $text-primary;
+        margin: 0 0 12px 0;
+      }
+
+      p {
+        font-size: 14px;
+        color: $text-secondary;
+        margin: 0;
+      }
+    }
   }
 }
 </style>
