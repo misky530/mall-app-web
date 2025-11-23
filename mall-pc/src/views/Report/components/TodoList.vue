@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { List, Timer, Scale, Coin } from '@element-plus/icons-vue'
+import { List, Timer, Warning, Coin } from '@element-plus/icons-vue'
 import { getCapitalByStatus, getDisputeOrders, getOvertimeOrders } from '@/utils/reportData'
 
 const router = useRouter()
@@ -133,7 +133,7 @@ onMounted(() => {
         <div class="todo-header">
           <div class="header-left">
             <div class="icon-wrapper dispute">
-              <el-icon :size="24"><Scale /></el-icon>
+              <el-icon :size="24"><Warning /></el-icon>
             </div>
             <div class="header-text">
               <h4>争议仲裁</h4>
