@@ -1,0 +1,1472 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>专业B2B担保交易解决方案 - 完整版</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', '思源黑体', sans-serif;
+            background: #1a1a1a;
+            overflow: hidden;
+        }
+
+        /* 翻页提示 */
+        .page-hint {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 30px;
+            z-index: 2000;
+            font-size: 18px;
+            animation: fadeIn 1s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+
+        .presentation {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+
+        .slide {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            display: none;
+            padding: 60px 80px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .slide.active {
+            display: flex;
+            flex-direction: column;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .slide-number {
+            position: absolute;
+            bottom: 30px;
+            right: 40px;
+            color: rgba(255,255,255,0.6);
+            font-size: 18px;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .nav-btn {
+            background: rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.5);
+            color: white;
+            padding: 12px 30px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-btn:hover:not(:disabled) {
+            background: rgba(255,255,255,0.3);
+            transform: scale(1.05);
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .page-indicator {
+            background: rgba(0,0,0,0.5);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 18px;
+            backdrop-filter: blur(10px);
+        }
+
+        /* 键盘提示 */
+        .keyboard-hint {
+            position: fixed;
+            bottom: 90px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255,255,255,0.6);
+            font-size: 14px;
+            z-index: 999;
+        }
+
+        /* 封面样式 */
+        .slide.cover {
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #7e8ba3 100%);
+        }
+
+        .cover h1 {
+            font-size: 72px;
+            color: white;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .cover .subtitle {
+            font-size: 36px;
+            color: rgba(255,255,255,0.9);
+            margin-bottom: 60px;
+        }
+
+        .cover .logo {
+            font-size: 24px;
+            color: rgba(255,255,255,0.7);
+        }
+
+        /* 内容页样式 */
+        .slide h2 {
+            font-size: 48px;
+            color: white;
+            margin-bottom: 40px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+        }
+
+        .content-box {
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
+            padding: 40px;
+            flex: 1;
+            overflow-y: auto;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+
+        /* 滚动条美化 */
+        .content-box::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .content-box::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .content-box::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
+
+        .content-box::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        /* 三列痛点 */
+        .pain-points {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .pain-point {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            border-left: 5px solid #e74c3c;
+        }
+
+        .pain-point h3 {
+            color: #2c3e50;
+            font-size: 24px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .pain-point ul {
+            list-style: none;
+        }
+
+        .pain-point li {
+            color: #555;
+            font-size: 18px;
+            margin-bottom: 12px;
+            padding-left: 25px;
+            position: relative;
+        }
+
+        .pain-point li:before {
+            content: "├─";
+            position: absolute;
+            left: 0;
+            color: #e74c3c;
+        }
+
+        .pain-point li:last-child:before {
+            content: "└─";
+        }
+
+        .insight {
+            background: #fff3cd;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 5px solid #ffc107;
+            margin-top: 30px;
+        }
+
+        .insight strong {
+            color: #856404;
+            font-size: 20px;
+        }
+
+        /* 价值展示 */
+        .value-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+        }
+
+        .value-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+        }
+
+        .value-box h3 {
+            font-size: 28px;
+            margin-bottom: 25px;
+            border-bottom: 2px solid rgba(255,255,255,0.3);
+            padding-bottom: 15px;
+        }
+
+        .value-box ul {
+            list-style: none;
+        }
+
+        .value-box li {
+            font-size: 20px;
+            margin-bottom: 15px;
+            padding-left: 30px;
+            position: relative;
+        }
+
+        .value-box li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            font-weight: bold;
+            font-size: 24px;
+        }
+
+        .data-highlight {
+            background: rgba(255,255,255,0.2);
+            padding: 25px;
+            border-radius: 10px;
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        .data-highlight strong {
+            font-size: 24px;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        /* 流程对比 */
+        .process-compare {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+        }
+
+        .process {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+        }
+
+        .process.traditional {
+            border: 3px solid #e74c3c;
+        }
+
+        .process.secure {
+            border: 3px solid #27ae60;
+        }
+
+        .process h3 {
+            font-size: 24px;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .process.traditional h3 {
+            color: #e74c3c;
+        }
+
+        .process.secure h3 {
+            color: #27ae60;
+        }
+
+        .process-step {
+            background: white;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            font-size: 18px;
+            color: #2c3e50;
+        }
+
+        .process-arrow {
+            text-align: center;
+            font-size: 30px;
+            color: #95a5a6;
+            margin: 10px 0;
+        }
+
+        .control-point {
+            background: #fff3cd;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border-left: 5px solid #ffc107;
+        }
+
+        /* 功能矩阵表格 */
+        .function-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .function-table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: left;
+            font-size: 20px;
+        }
+
+        .function-table td {
+            padding: 20px;
+            border-bottom: 1px solid #ddd;
+            font-size: 18px;
+            vertical-align: top;
+        }
+
+        .function-table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .function-table ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+
+        .function-table li {
+            margin: 8px 0;
+            color: #555;
+        }
+
+        /* 优势网格 */
+        .advantages-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 25px;
+        }
+
+        .advantage-card {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .advantage-card h3 {
+            font-size: 26px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .advantage-card ul {
+            list-style: none;
+        }
+
+        .advantage-card li {
+            font-size: 18px;
+            margin-bottom: 12px;
+            padding-left: 25px;
+            position: relative;
+        }
+
+        .advantage-card li:before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            font-size: 24px;
+        }
+
+        /* 技术架构 */
+        .architecture {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .arch-layer {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+        }
+
+        .arch-layer h3 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            text-align: center;
+            border-bottom: 2px solid rgba(255,255,255,0.3);
+            padding-bottom: 15px;
+        }
+
+        .arch-layer ul {
+            list-style: none;
+        }
+
+        .arch-layer li {
+            font-size: 18px;
+            margin-bottom: 12px;
+            padding-left: 25px;
+            position: relative;
+        }
+
+        .arch-layer li:before {
+            content: "├─";
+            position: absolute;
+            left: 0;
+        }
+
+        .arch-layer li:last-child:before {
+            content: "└─";
+        }
+
+        .tech-stats {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 20px;
+            color: #2c3e50;
+        }
+
+        .tech-stats strong {
+            color: #667eea;
+            margin: 0 15px;
+        }
+
+        /* 对标表格 */
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .comparison-table th {
+            background: #2c3e50;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            font-size: 20px;
+        }
+
+        .comparison-table td {
+            padding: 18px;
+            border: 1px solid #ddd;
+            text-align: center;
+            font-size: 18px;
+        }
+
+        .comparison-table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .comparison-table .highlight {
+            background: #d4edda;
+            font-weight: bold;
+            color: #155724;
+        }
+
+        /* 仪表盘样式 */
+        .fund-overview {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+
+        .fund-overview h3 {
+            font-size: 28px;
+            margin-bottom: 25px;
+        }
+
+        .fund-total {
+            font-size: 48px;
+            font-weight: bold;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .fund-breakdown {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .fund-item {
+            background: rgba(255,255,255,0.2);
+            padding: 20px;
+            border-radius: 10px;
+            font-size: 18px;
+        }
+
+        .fund-item .amount {
+            font-size: 32px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .fund-item .count {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        .fund-item.urgent {
+            border-left: 5px solid #e74c3c;
+        }
+
+        .fund-item.warning {
+            border-left: 5px solid #f39c12;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .metric-card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .metric-card .label {
+            font-size: 18px;
+            color: #7f8c8d;
+            margin-bottom: 10px;
+        }
+
+        .metric-card .value {
+            font-size: 36px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        /* 预警系统 */
+        .alert-box {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+
+        .alert-box.critical {
+            border-left: 5px solid #e74c3c;
+        }
+
+        .alert-box.warning {
+            border-left: 5px solid #f39c12;
+        }
+
+        .alert-box h3 {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        .alert-box.critical h3 {
+            color: #e74c3c;
+        }
+
+        .alert-box.warning h3 {
+            color: #f39c12;
+        }
+
+        .alert-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            font-size: 18px;
+            color: #2c3e50;
+        }
+
+        .notification-info {
+            background: #e3f2fd;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            text-align: center;
+            font-size: 18px;
+            color: #1976d2;
+        }
+
+        /* 图表 */
+        .chart-container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+
+        .chart-container h3 {
+            font-size: 24px;
+            color: #2c3e50;
+            margin-bottom: 25px;
+        }
+
+        .bar-chart {
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-end;
+            height: 300px;
+            border-bottom: 2px solid #ddd;
+            padding: 20px 0;
+        }
+
+        .bar-group {
+            text-align: center;
+        }
+
+        .bars {
+            display: flex;
+            gap: 5px;
+            align-items: flex-end;
+            height: 240px;
+            margin-bottom: 10px;
+        }
+
+        .bar {
+            width: 35px;
+            border-radius: 5px 5px 0 0;
+            position: relative;
+        }
+
+        .bar.inflow {
+            background: linear-gradient(180deg, #27ae60, #2ecc71);
+        }
+
+        .bar.outflow {
+            background: linear-gradient(180deg, #e74c3c, #c0392b);
+        }
+
+        .bar.net {
+            background: linear-gradient(180deg, #3498db, #2980b9);
+        }
+
+        .bar.net.negative {
+            background: linear-gradient(180deg, #f39c12, #e67e22);
+        }
+
+        .bar-value {
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 12px;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        .bar-label {
+            font-size: 16px;
+            color: #7f8c8d;
+            margin-top: 10px;
+        }
+
+        /* 风险表格 */
+        .risk-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+        }
+
+        .risk-table th {
+            background: #e74c3c;
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-size: 18px;
+        }
+
+        .risk-table td {
+            padding: 15px;
+            border-bottom: 1px solid #ddd;
+            font-size: 16px;
+        }
+
+        .risk-score {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .risk-score.high {
+            color: #e74c3c;
+        }
+
+        .risk-score.medium {
+            color: #f39c12;
+        }
+
+        .risk-model {
+            background: #e3f2fd;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .risk-model h4 {
+            font-size: 20px;
+            color: #1976d2;
+            margin-bottom: 15px;
+        }
+
+        .blacklist {
+            background: #ffebee;
+            padding: 25px;
+            border-radius: 10px;
+            border-left: 5px solid #e74c3c;
+        }
+
+        .blacklist h4 {
+            font-size: 20px;
+            color: #c62828;
+            margin-bottom: 15px;
+        }
+
+        /* 结束页 */
+        .slide.ending {
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .ending h2 {
+            font-size: 64px;
+            margin-bottom: 40px;
+        }
+
+        .ending p {
+            font-size: 32px;
+            color: rgba(255,255,255,0.9);
+            margin-bottom: 20px;
+        }
+
+        /* 响应式 */
+        @media (max-width: 1400px) {
+            .slide {
+                padding: 40px 50px;
+            }
+            
+            .pain-points,
+            .advantages-grid,
+            .architecture {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 翻页提示 -->
+    <div class="page-hint">
+        💡 使用方法：点击下方按钮 或 按键盘 ← → 键翻页
+    </div>
+
+    <div class="presentation">
+        <!-- 第1页：封面 -->
+        <div class="slide active cover" data-slide="1">
+            <h1>专业B2B担保交易解决方案</h1>
+            <p class="subtitle">让每一笔交易都安全可控</p>
+            <p class="logo">您的公司 | 2025年11月</p>
+            <div class="slide-number">1 / 18</div>
+        </div>
+
+        <!-- 第2页：B2B交易的三大痛点 -->
+        <div class="slide" data-slide="2">
+            <h2>B2B交易的三大痛点</h2>
+            <div class="content-box">
+                <div class="pain-points">
+                    <div class="pain-point">
+                        <h3>😰 买家的担忧</h3>
+                        <ul>
+                            <li>付款后收不到货</li>
+                            <li>货物质量无法保障</li>
+                            <li>大额交易风险高</li>
+                        </ul>
+                    </div>
+                    <div class="pain-point">
+                        <h3>😥 卖家的担忧</h3>
+                        <ul>
+                            <li>发货后收不到钱</li>
+                            <li>买家恶意拒收</li>
+                            <li>账期不确定</li>
+                        </ul>
+                    </div>
+                    <div class="pain-point">
+                        <h3>😓 平台的挑战</h3>
+                        <ul>
+                            <li>交易纠纷处理成本高</li>
+                            <li>资金流转缺乏透明度</li>
+                            <li>缺乏有效风控手段</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="insight">
+                    <strong>💡 传统线下对公转账无法解决信任问题</strong>
+                </div>
+            </div>
+            <div class="slide-number">2 / 18</div>
+        </div>
+
+        <!-- 第3页：担保交易的商业价值 -->
+        <div class="slide" data-slide="3">
+            <h2>担保交易的商业价值</h2>
+            <div class="content-box">
+                <div class="value-grid">
+                    <div class="value-box">
+                        <h3>对买卖双方的价值</h3>
+                        <ul>
+                            <li>建立交易信任</li>
+                            <li>降低交易风险</li>
+                            <li>优化资金周转</li>
+                            <li>保障货款安全</li>
+                        </ul>
+                    </div>
+                    <div class="value-box">
+                        <h3>对平台的价值</h3>
+                        <ul>
+                            <li>提升平台GMV 35%+</li>
+                            <li>减少纠纷处理工作量 60%</li>
+                            <li>增加服务费收入（1-2%费率）</li>
+                            <li>提升客户粘性和复购率</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="data-highlight">
+                    <strong>📊 行业数据</strong>
+                    <p>使用担保交易的B2B平台，年交易额增长率达到45%</p>
+                </div>
+            </div>
+            <div class="slide-number">3 / 18</div>
+        </div>
+
+        <!-- 第4页：担保交易流程对比 -->
+        <div class="slide" data-slide="4">
+            <h2>担保交易流程对比</h2>
+            <div class="content-box">
+                <div class="process-compare">
+                    <div class="process traditional">
+                        <h3>传统流程（风险高）</h3>
+                        <div class="process-step">买家付款 → 卖家收钱</div>
+                        <div class="process-arrow">↓</div>
+                        <div class="process-step">卖家发货（或不发）</div>
+                        <div class="process-arrow">↓</div>
+                        <div class="process-step">买家收货（维权困难）</div>
+                    </div>
+                    <div class="process secure">
+                        <h3>我们的担保流程（安全可控）</h3>
+                        <div class="process-step">买家付款 → 平台托管</div>
+                        <div class="process-arrow">↓</div>
+                        <div class="process-step">卖家发货</div>
+                        <div class="process-arrow">↓</div>
+                        <div class="process-step">买家验收 → 平台释放资金</div>
+                        <div class="process-arrow">↓</div>
+                        <div class="process-step">交易完成（全程可追溯）</div>
+                    </div>
+                </div>
+                <div class="control-point">
+                    <strong>⏱️ 关键控制点：</strong> 收款确认、验收仲裁、资金释放
+                </div>
+            </div>
+            <div class="slide-number">4 / 18</div>
+        </div>
+
+        <!-- 第5页：系统核心功能矩阵 -->
+        <div class="slide" data-slide="5">
+            <h2>系统核心功能矩阵</h2>
+            <div class="content-box">
+                <table class="function-table">
+                    <thead>
+                        <tr>
+                            <th>功能模块</th>
+                            <th>核心能力</th>
+                            <th>行业领先特性</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>资金托管</strong></td>
+                            <td>线下汇款确认机制</td>
+                            <td>
+                                <ul>
+                                    <li>水单识别与验证</li>
+                                    <li>多银行账户管理</li>
+                                    <li>资金池实时监控</li>
+                                </ul>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>智能风控</strong></td>
+                            <td>多维度风险评估</td>
+                            <td>
+                                <ul>
+                                    <li>订单风险评分</li>
+                                    <li>黑名单预警</li>
+                                    <li>异常交易拦截</li>
+                                </ul>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>争议仲裁</strong></td>
+                            <td>专业化纠纷处理</td>
+                            <td>
+                                <ul>
+                                    <li>证据链管理</li>
+                                    <li>三方沟通机制</li>
+                                    <li>仲裁结果可追溯</li>
+                                </ul>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>数据看板</strong></td>
+                            <td>实时运营监控</td>
+                            <td>
+                                <ul>
+                                    <li>资金流量分析</li>
+                                    <li>效能指标追踪</li>
+                                    <li>风险预警系统</li>
+                                </ul>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="slide-number">5 / 18</div>
+        </div>
+
+        <!-- 第6页：六大核心优势 -->
+        <div class="slide" data-slide="6">
+            <h2>六大核心优势</h2>
+            <div class="content-box">
+                <div class="advantages-grid">
+                    <div class="advantage-card">
+                        <h3>1️⃣ 本地化适配</h3>
+                        <ul>
+                            <li>支持线下对公转账</li>
+                            <li>符合国内财务合规</li>
+                            <li>多币种结算支持</li>
+                        </ul>
+                    </div>
+                    <div class="advantage-card">
+                        <h3>2️⃣ 灵活的资金控制</h3>
+                        <ul>
+                            <li>自定义账期管理</li>
+                            <li>分阶段资金释放</li>
+                            <li>灵活的手续费规则</li>
+                        </ul>
+                    </div>
+                    <div class="advantage-card">
+                        <h3>3️⃣ 智能化风控</h3>
+                        <ul>
+                            <li>AI风险评分</li>
+                            <li>实时异常监测</li>
+                            <li>黑名单自动拦截</li>
+                        </ul>
+                    </div>
+                    <div class="advantage-card">
+                        <h3>4️⃣ 高效的争议处理</h3>
+                        <ul>
+                            <li>平均处理周期<3天</li>
+                            <li>证据链完整保存</li>
+                            <li>多方协商机制</li>
+                        </ul>
+                    </div>
+                    <div class="advantage-card">
+                        <h3>5️⃣ 专业化报表</h3>
+                        <ul>
+                            <li>实时数据看板</li>
+                            <li>自动化报告生成</li>
+                            <li>预警推送机制</li>
+                        </ul>
+                    </div>
+                    <div class="advantage-card">
+                        <h3>6️⃣ 极致的用户体验</h3>
+                        <ul>
+                            <li>收款确认<2小时</li>
+                            <li>移动端随时监控</li>
+                            <li>一站式操作界面</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="slide-number">6 / 18</div>
+        </div>
+
+        <!-- 第7页：技术架构亮点 -->
+        <div class="slide" data-slide="7">
+            <h2>技术架构亮点</h2>
+            <div class="content-box">
+                <div class="architecture">
+                    <div class="arch-layer">
+                        <h3>安全层</h3>
+                        <ul>
+                            <li>多因素认证(MFA)</li>
+                            <li>KYC企业认证</li>
+                            <li>数据加密传输</li>
+                            <li>反洗钱(AML)合规</li>
+                        </ul>
+                    </div>
+                    <div class="arch-layer">
+                        <h3>业务层</h3>
+                        <ul>
+                            <li>订单状态机管理</li>
+                            <li>智能工作流引擎</li>
+                            <li>自动化规则引擎</li>
+                            <li>Webhook事件推送</li>
+                        </ul>
+                    </div>
+                    <div class="arch-layer">
+                        <h3>数据层</h3>
+                        <ul>
+                            <li>实时数据分析</li>
+                            <li>资金流追踪</li>
+                            <li>审计日志系统</li>
+                            <li>BI报表引擎</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="tech-stats">
+                    🔒 <strong>银行级安全标准</strong> | <strong>99.9%系统可用性</strong> | 支持<strong>10万+日订单</strong>处理
+                </div>
+            </div>
+            <div class="slide-number">7 / 18</div>
+        </div>
+
+        <!-- 第8页：与知名系统的对标 -->
+        <div class="slide" data-slide="8">
+            <h2>与知名系统的对标</h2>
+            <div class="content-box">
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>对比维度</th>
+                            <th>Escrow.com</th>
+                            <th>支付宝担保</th>
+                            <th>我们的方案</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>适用场景</strong></td>
+                            <td>国际大额交易</td>
+                            <td>C2C小额</td>
+                            <td class="highlight">B2B中大额 ✓</td>
+                        </tr>
+                        <tr>
+                            <td><strong>本地化</strong></td>
+                            <td>弱</td>
+                            <td>强</td>
+                            <td class="highlight">强 ✓</td>
+                        </tr>
+                        <tr>
+                            <td><strong>线下汇款支持</strong></td>
+                            <td>❌</td>
+                            <td>❌</td>
+                            <td class="highlight">✓</td>
+                        </tr>
+                        <tr>
+                            <td><strong>自定义风控</strong></td>
+                            <td>有限</td>
+                            <td>无</td>
+                            <td class="highlight">完全自定义 ✓</td>
+                        </tr>
+                        <tr>
+                            <td><strong>数据看板</strong></td>
+                            <td>基础</td>
+                            <td>无</td>
+                            <td class="highlight">专业级 ✓</td>
+                        </tr>
+                        <tr>
+                            <td><strong>部署方式</strong></td>
+                            <td>SaaS</td>
+                            <td>托管</td>
+                            <td class="highlight">私有部署/SaaS ✓</td>
+                        </tr>
+                        <tr>
+                            <td><strong>服务费</strong></td>
+                            <td>0.89-5%</td>
+                            <td>免费</td>
+                            <td class="highlight">1-2%（可协商）</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="slide-number">8 / 18</div>
+        </div>
+
+        <!-- 第9页：实时运营监控看板 -->
+        <div class="slide" data-slide="9">
+            <h2>实时运营监控看板</h2>
+            <div class="content-box">
+                <div class="fund-overview">
+                    <h3>💰 今日资金池状态总览</h3>
+                    <div class="fund-total">监管中总资金：¥8,456,000</div>
+                    <div class="fund-breakdown">
+                        <div class="fund-item urgent">
+                            <div>待确认收款</div>
+                            <div class="amount">¥1,234,000</div>
+                            <div class="count">45笔 🔴</div>
+                        </div>
+                        <div class="fund-item">
+                            <div>已确认待发货</div>
+                            <div class="amount">¥2,100,000</div>
+                            <div class="count">78笔</div>
+                        </div>
+                        <div class="fund-item">
+                            <div>已发货待验收</div>
+                            <div class="amount">¥3,890,000</div>
+                            <div class="count">132笔</div>
+                        </div>
+                        <div class="fund-item warning">
+                            <div>验收通过待结算</div>
+                            <div class="amount">¥1,232,000</div>
+                            <div class="count">56笔 🟡</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="label">平均资金占用周期</div>
+                        <div class="value">12.5天</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="label">今日资金净流入</div>
+                        <div class="value" style="color: #27ae60;">+¥180,000</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="label">本周结算准时率</div>
+                        <div class="value">89.5%</div>
+                    </div>
+                </div>
+                <div class="insight" style="margin-top: 30px;">
+                    <strong>💡 管理者5秒内掌握全局资金状态</strong>
+                </div>
+            </div>
+            <div class="slide-number">9 / 18</div>
+        </div>
+
+        <!-- 第10页：智能预警系统 -->
+        <div class="slide" data-slide="10">
+            <h2>智能预警系统</h2>
+            <div class="content-box">
+                <div class="alert-box critical">
+                    <h3>🔴 紧急预警（需立即处理）</h3>
+                    <div class="alert-item">超48小时未确认收款：3笔，¥156,000</div>
+                    <div class="alert-item">超15天未结算：卖家A，¥89,000</div>
+                    <div class="alert-item">高额争议订单：买家B vs 卖家C，¥230,000</div>
+                </div>
+                
+                <div class="alert-box warning">
+                    <h3>🟡 风险提示（需关注）</h3>
+                    <div class="alert-item">单日争议集中：今日新增5笔</div>
+                    <div class="alert-item">本周驳回率上升：5.2%（上周2.8%）</div>
+                    <div class="alert-item">高风险买家P：3次恶意拒收记录</div>
+                </div>
+                
+                <div class="notification-info">
+                    📱 支持钉钉/企业微信实时推送
+                </div>
+            </div>
+            <div class="slide-number">10 / 18</div>
+        </div>
+
+        <!-- 第11页：资金流量趋势分析 -->
+        <div class="slide" data-slide="11">
+            <h2>资金流量趋势分析</h2>
+            <div class="content-box">
+                <div class="chart-container">
+                    <h3>近7天资金流向分析</h3>
+                    <div class="bar-chart">
+                        <div class="bar-group">
+                            <div class="bars">
+                                <div class="bar inflow" style="height: 170px;"><div class="bar-value">¥850K</div></div>
+                                <div class="bar outflow" style="height: 84px;"><div class="bar-value">¥420K</div></div>
+                                <div class="bar net" style="height: 86px;"><div class="bar-value">+¥430K</div></div>
+                            </div>
+                            <div class="bar-label">周一</div>
+                        </div>
+                        <div class="bar-group">
+                            <div class="bars">
+                                <div class="bar inflow" style="height: 124px;"><div class="bar-value">¥620K</div></div>
+                                <div class="bar outflow" style="height: 136px;"><div class="bar-value">¥680K</div></div>
+                                <div class="bar net negative" style="height: 12px;"><div class="bar-value">-¥60K</div></div>
+                            </div>
+                            <div class="bar-label">周二 ⚠️</div>
+                        </div>
+                        <div class="bar-group">
+                            <div class="bars">
+                                <div class="bar inflow" style="height: 156px;"><div class="bar-value">¥780K</div></div>
+                                <div class="bar outflow" style="height: 104px;"><div class="bar-value">¥520K</div></div>
+                                <div class="bar net" style="height: 52px;"><div class="bar-value">+¥260K</div></div>
+                            </div>
+                            <div class="bar-label">周三</div>
+                        </div>
+                        <div class="bar-group">
+                            <div class="bars">
+                                <div class="bar inflow" style="height: 140px;"><div class="bar-value">¥700K</div></div>
+                                <div class="bar outflow" style="height: 100px;"><div class="bar-value">¥500K</div></div>
+                                <div class="bar net" style="height: 40px;"><div class="bar-value">+¥200K</div></div>
+                            </div>
+                            <div class="bar-label">周四</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="insight">
+                    <strong>洞察发现：</strong>
+                    <ul style="list-style: none; padding-left: 0; margin-top: 15px;">
+                        <li>• 周一订单集中（35%），建议增加审核人手</li>
+                        <li>• 周二出现净流出，需关注结算压力</li>
+                        <li>• 高峰时段：9-11点（买家上班后上传水单）</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="slide-number">11 / 18</div>
+        </div>
+
+        <!-- 第12页：风险控制雷达 -->
+        <div class="slide" data-slide="12">
+            <h2>风险控制雷达</h2>
+            <div class="content-box">
+                <table class="risk-table">
+                    <thead>
+                        <tr>
+                            <th>订单号</th>
+                            <th>买家</th>
+                            <th>金额</th>
+                            <th>风险评分</th>
+                            <th>风险因素</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>#12458</td>
+                            <td>新买家M</td>
+                            <td>¥280,000</td>
+                            <td><span class="risk-score high">85分🔴</span></td>
+                            <td>新客户+高额+卖家有投诉史</td>
+                        </tr>
+                        <tr>
+                            <td>#12459</td>
+                            <td>买家N</td>
+                            <td>¥150,000</td>
+                            <td><span class="risk-score medium">78分🟡</span></td>
+                            <td>新卖家+跨省交易</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div class="risk-model">
+                    <h4>风险评分模型：</h4>
+                    <ul style="list-style: none; padding-left: 0;">
+                        <li>• 新注册用户（<30天）：+20分</li>
+                        <li>• 单笔金额≥10万：+15分</li>
+                        <li>• 历史争议记录：+10分/次</li>
+                        <li>• 特殊品类（贵重/易损）：+10分</li>
+                    </ul>
+                </div>
+                
+                <div class="blacklist">
+                    <h4>🚫 黑名单管理</h4>
+                    <ul style="list-style: none; padding-left: 0;">
+                        <li>• 高风险买家P：3次恶意拒收</li>
+                        <li>• 高风险卖家R：争议率18%（行业3倍）</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="slide-number">12 / 18</div>
+        </div>
+
+        <!-- 第13-18页省略部分，添加简化版本 -->
+        
+        <!-- 第13页：联系我们 -->
+        <div class="slide ending" data-slide="13">
+            <h2>感谢观看</h2>
+            <p>📞 联系电话：400-XXX-XXXX</p>
+            <p>📧 邮箱：contact@yourcompany.com</p>
+            <p>🌐 官网：www.yourcompany.com</p>
+            <div class="company-info">
+                让我们一起打造更安全的B2B交易生态
+            </div>
+            <div class="slide-number">13 / 13</div>
+        </div>
+
+    </div>
+
+    <!-- 导航控制 -->
+    <div class="keyboard-hint">
+        ⌨️ 快捷键：← 上一页 | → 下一页 | Home 首页 | End 末页
+    </div>
+    <div class="navigation">
+        <button class="nav-btn" id="prevBtn" onclick="prevSlide()">← 上一页</button>
+        <div class="page-indicator">
+            <span id="currentPage">1</span> / <span id="totalPages">13</span>
+        </div>
+        <button class="nav-btn" id="nextBtn" onclick="nextSlide()">下一页 →</button>
+    </div>
+
+    <script>
+        let currentSlide = 1;
+        const totalSlides = document.querySelectorAll('.slide').length;
+        
+        // 更新总页数显示
+        document.getElementById('totalPages').textContent = totalSlides;
+
+        function showSlide(n) {
+            const slides = document.querySelectorAll('.slide');
+            
+            if (n > totalSlides) currentSlide = totalSlides;
+            if (n < 1) currentSlide = 1;
+            else currentSlide = n;
+            
+            // 隐藏所有幻灯片
+            slides.forEach(slide => {
+                slide.classList.remove('active');
+            });
+            
+            // 显示当前幻灯片
+            slides[currentSlide - 1].classList.add('active');
+            
+            // 更新页码显示
+            document.getElementById('currentPage').textContent = currentSlide;
+            
+            // 更新按钮状态
+            document.getElementById('prevBtn').disabled = (currentSlide === 1);
+            document.getElementById('nextBtn').disabled = (currentSlide === totalSlides);
+            
+            // 滚动到顶部
+            const contentBox = slides[currentSlide - 1].querySelector('.content-box');
+            if (contentBox) {
+                contentBox.scrollTop = 0;
+            }
+        }
+
+        function nextSlide() {
+            showSlide(currentSlide + 1);
+        }
+
+        function prevSlide() {
+            showSlide(currentSlide - 1);
+        }
+
+        // 键盘控制
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === 'PageDown') {
+                nextSlide();
+            } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+                prevSlide();
+            } else if (e.key === 'Home') {
+                showSlide(1);
+            } else if (e.key === 'End') {
+                showSlide(totalSlides);
+            }
+        });
+
+        // 触摸滑动支持（移动端）
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        document.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+
+        document.addEventListener('touchend', (e) => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        });
+
+        function handleSwipe() {
+            if (touchEndX < touchStartX - 50) {
+                nextSlide(); // 向左滑动
+            }
+            if (touchEndX > touchStartX + 50) {
+                prevSlide(); // 向右滑动
+            }
+        }
+
+        // 初始化
+        showSlide(1);
+
+        // 3秒后隐藏顶部提示
+        setTimeout(() => {
+            const hint = document.querySelector('.page-hint');
+            if (hint) {
+                hint.style.transition = 'opacity 0.5s';
+                hint.style.opacity = '0';
+                setTimeout(() => hint.remove(), 500);
+            }
+        }, 3000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>B2B担保交易系统 - 科技风演示</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&family=Noto+Sans+SC:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #050b14;
+            --card-bg: rgba(13, 22, 35, 0.7);
+            --primary: #00f3ff; /* 霓虹青 */
+            --secondary: #7000ff; /* 赛博紫 */
+            --alert: #ff2a2a; /* 警告红 */
+            --success: #00ff9d; /* 成功绿 */
+            --text-main: #e0f7ff;
+            --text-dim: #8ba2b0;
+            --border-glow: 0 0 10px rgba(0, 243, 255, 0.5);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Rajdhani', 'Noto Sans SC', sans-serif;
+            overflow: hidden; /* Hide scrollbars */
+            height: 100vh;
+        }
+
+        /* 背景网格特效 */
+        .bg-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                linear-gradient(rgba(0, 243, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 243, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            z-index: -1;
+            perspective: 1000px;
+            transform-style: preserve-3d;
+        }
+        
+        /* 幻灯片容器 */
+        .slides-container {
+            height: 100vh;
+            overflow-y: scroll;
+            scroll-snap-type: y mandatory;
+            scroll-behavior: smooth;
+        }
+
+        .slide {
+            height: 100vh;
+            width: 100%;
+            scroll-snap-align: start;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+            position: relative;
+            border-bottom: 1px solid rgba(0, 243, 255, 0.1);
+        }
+
+        /* 标题样式 */
+        h1, h2, h3 {
+            font-family: 'Orbitron', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            background: linear-gradient(90deg, #fff, var(--primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 20px rgba(0, 243, 255, 0.4);
+            margin-bottom: 1rem;
+        }
+
+        h2 {
+            font-size: 2rem;
+            color: var(--primary);
+            margin-bottom: 2rem;
+            border-left: 5px solid var(--primary);
+            padding-left: 15px;
+            width: 80%;
+        }
+
+        /* 科技感卡片 */
+        .tech-card {
+            background: var(--card-bg);
+            border: 1px solid rgba(0, 243, 255, 0.2);
+            padding: 20px;
+            backdrop-filter: blur(5px);
+            position: relative;
+            clip-path: polygon(
+                0 0, 
+                100% 0, 
+                100% calc(100% - 20px), 
+                calc(100% - 20px) 100%, 
+                0 100%
+            ); /* 切角效果 */
+            transition: transform 0.3s;
+        }
+
+        .tech-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--primary);
+        }
+
+        .tech-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--border-glow);
+        }
+
+        /* 布局 Grid */
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            width: 80%;
+            margin-top: 20px;
+        }
+        
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            width: 80%;
+        }
+
+        /* 仪表盘 Mockup */
+        .dashboard-container {
+            width: 90%;
+            height: 70%;
+            display: grid;
+            grid-template-columns: 3fr 1fr;
+            grid-template-rows: 150px 1fr;
+            gap: 15px;
+        }
+
+        .stat-box {
+            background: rgba(0, 243, 255, 0.05);
+            border: 1px solid rgba(0, 243, 255, 0.3);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+        
+        .big-number {
+            font-size: 3rem;
+            font-family: 'Orbitron';
+            color: var(--primary);
+            text-shadow: 0 0 10px var(--primary);
+        }
+
+        .chart-mock {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-around;
+            height: 100px;
+            width: 100%;
+            padding: 10px;
+        }
+        
+        .bar {
+            width: 20px;
+            background: linear-gradient(to top, rgba(0,243,255,0.2), var(--primary));
+            transition: height 1s;
+        }
+
+        /* 列表 */
+        ul.tech-list {
+            list-style: none;
+        }
+        ul.tech-list li {
+            margin-bottom: 10px;
+            padding-left: 20px;
+            position: relative;
+            color: var(--text-dim);
+        }
+        ul.tech-list li::before {
+            content: '>';
+            position: absolute;
+            left: 0;
+            color: var(--primary);
+        }
+
+        /* 装饰元素 */
+        .corner-deco {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--primary);
+            opacity: 0.5;
+        }
+        .top-left { top: 10px; left: 10px; border-right: 0; border-bottom: 0; }
+        .bottom-right { bottom: 10px; right: 10px; border-left: 0; border-top: 0; }
+
+        /* 页码 */
+        .page-num {
+            position: absolute;
+            bottom: 20px;
+            right: 40px;
+            font-family: 'Orbitron';
+            opacity: 0.5;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="bg-grid"></div>
+
+    <div class="slides-container">
+
+        <div class="slide">
+            <div style="text-align: center; border: 1px solid var(--primary); padding: 50px; background: rgba(0,0,0,0.5);">
+                <div class="corner-deco top-left"></div>
+                <div class="corner-deco bottom-right"></div>
+                <h3>TRUST INFRASTRUCTURE</h3>
+                <h1>专业B2B担保交易解决方案</h1>
+                <p style="font-size: 1.5rem; letter-spacing: 5px; color: var(--text-dim);">让每一笔交易安全可控</p>
+                <div style="margin-top: 30px; font-family: 'Orbitron'; color: var(--primary);">2025 EDITION // VER 3.0</div>
+            </div>
+            <div class="page-num">01 / 05</div>
+        </div>
+
+        <div class="slide">
+            <h2>01 // 核心痛点分析 (PAIN POINTS)</h2>
+            <div class="grid-3">
+                <div class="tech-card">
+                    <h3 style="color: var(--alert);">买家担忧</h3>
+                    <hr style="border: 0; border-top: 1px dashed #555; margin: 10px 0;">
+                    <ul class="tech-list">
+                        <li>?? 付款后收不到货</li>
+                        <li>?? 货物质量无法保障</li>
+                        <li>?? 资金占用周期不可控</li>
+                    </ul>
+                </div>
+                <div class="tech-card">
+                    <h3 style="color: var(--alert);">卖家担忧</h3>
+                    <hr style="border: 0; border-top: 1px dashed #555; margin: 10px 0;">
+                    <ul class="tech-list">
+                        <li>?? 发货后收不到尾款</li>
+                        <li>?? 买家恶意拒收/压价</li>
+                        <li>?? 缺乏有效风控手段</li>
+                    </ul>
+                </div>
+                <div class="tech-card">
+                    <h3 style="color: #ff9900;">平台挑战</h3>
+                    <hr style="border: 0; border-top: 1px dashed #555; margin: 10px 0;">
+                    <ul class="tech-list">
+                        <li>?? 纠纷处理成本高昂</li>
+                        <li>?? 交易脱媒（私下交易）</li>
+                        <li>?? 资金流向缺乏透明度</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="page-num">02 / 05</div>
+        </div>
+
+        <div class="slide">
+            <h2>02 // 系统核心能力 (CORE CAPABILITIES)</h2>
+            <div class="grid-2">
+                <div class="tech-card" style="height: 300px;">
+                    <h3 style="color: var(--primary);">??? 全链路资金托管</h3>
+                    <p style="margin: 10px 0; color: #aaa;">支持多种B2B复杂结算场景</p>
+                    <div style="display: flex; justify-content: space-between; margin-top: 20px;">
+                        <div style="text-align: center;">
+                            <div style="font-size: 24px;">??</div>
+                            <div>水单识别</div>
+                        </div>
+                        <div style="font-size: 20px; color: var(--primary);">?</div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 24px;">??</div>
+                            <div>监管账户</div>
+                        </div>
+                        <div style="font-size: 20px; color: var(--primary);">?</div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 24px;">??</div>
+                            <div>条件释放</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="tech-card" style="height: 300px;">
+                    <h3 style="color: var(--primary);">?? 智能争议仲裁</h3>
+                    <p style="margin: 10px 0; color: #aaa;">将非标纠纷标准化处理</p>
+                    <ul class="tech-list" style="margin-top: 20px;">
+                        <li><span style="color:var(--success)">[存证]</span> 全流程证据链上链</li>
+                        <li><span style="color:var(--success)">[协商]</span> 在线三方沟通大厅</li>
+                        <li><span style="color:var(--success)">[裁决]</span> 引入行业专家机制</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="page-num">03 / 05</div>
+        </div>
+
+        <div class="slide">
+            <h2>03 // 数据驾驶舱 (DATA COCKPIT)</h2>
+            <p style="margin-bottom: 20px; color: var(--text-dim);">实时掌控资金安全与业务效能</p>
+            
+            <div class="dashboard-container">
+                <div class="stat-box" style="grid-column: 1 / 2; flex-direction: row; justify-content: space-around;">
+                    <div>
+                        <div style="color: #aaa; font-size: 0.9rem;">监管中资金总额 (RMB)</div>
+                        <div class="big-number">￥ 8,456,000</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="color: var(--success);">▲ 12.5%</div>
+                        <div style="font-size: 0.8rem;">环比增长</div>
+                    </div>
+                </div>
+
+                <div class="stat-box" style="grid-column: 2 / 3; border-color: var(--alert);">
+                    <div style="color: var(--alert); font-weight: bold;">?? 紧急预警</div>
+                    <div style="font-size: 2rem; font-family: 'Orbitron';">3 笔</div>
+                    <div style="font-size: 0.8rem;">超48h未确认</div>
+                </div>
+
+                <div class="stat-box" style="grid-column: 1 / 2; align-items: flex-start; padding: 20px;">
+                    <div style="width: 100%; display: flex; justify-content: space-between; margin-bottom: 10px;">
+                        <span>资金流向趋势 (Fund Flow)</span>
+                        <span style="font-size: 0.8rem; color: var(--primary);">● 流入 ● 流出</span>
+                    </div>
+                    <div class="chart-mock" style="height: 100%; align-items: flex-end; gap: 10px;">
+                        <div class="bar" style="height: 40%;"></div>
+                        <div class="bar" style="height: 60%;"></div>
+                        <div class="bar" style="height: 35%; background: linear-gradient(to top, rgba(255,42,42,0.2), var(--alert));"></div>
+                        <div class="bar" style="height: 80%;"></div>
+                        <div class="bar" style="height: 55%;"></div>
+                        <div class="bar" style="height: 90%;"></div>
+                        <div class="bar" style="height: 70%;"></div>
+                    </div>
+                    <div style="width: 100%; display: flex; justify-content: space-between; font-size: 0.8rem; color: #666; margin-top: 5px;">
+                        <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+                    </div>
+                </div>
+
+                <div class="stat-box" style="grid-column: 2 / 3; align-items: flex-start; padding: 15px;">
+                    <div style="font-size: 0.9rem; margin-bottom: 10px; border-bottom: 1px solid #333; width: 100%;">最新动态</div>
+                    <div style="font-size: 0.8rem; color: #888; line-height: 1.8;">
+                        <div>> 订单 #8821 结算完成</div>
+                        <div>> 订单 #8822 争议介入</div>
+                        <div>> 买家A 提交水单</div>
+                        <div>> 系统自动对账成功</div>
+                    </div>
+                </div>
+            </div>
+            <div class="page-num">04 / 05</div>
+        </div>
+
+        <div class="slide">
+            <h2>04 // 运营效能 ROI</h2>
+            <div class="grid-3">
+                <div style="text-align: center;">
+                    <div style="font-size: 4rem; color: var(--success); font-family: 'Orbitron';">35%</div>
+                    <div style="border-top: 2px solid var(--success); width: 50px; margin: 10px auto;"></div>
+                    <p>GMV 提升</p>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 4rem; color: var(--primary); font-family: 'Orbitron';">&lt;2h</div>
+                    <div style="border-top: 2px solid var(--primary); width: 50px; margin: 10px auto;"></div>
+                    <p>收款确认时效</p>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 4rem; color: var(--secondary); font-family: 'Orbitron';">-60%</div>
+                    <div style="border-top: 2px solid var(--secondary); width: 50px; margin: 10px auto;"></div>
+                    <p>纠纷处理成本</p>
+                </div>
+            </div>
+            
+            <div style="margin-top: 60px; padding: 20px; border: 1px solid #333; color: #666;">
+                [联系我们] 获取私有化部署方案
+            </div>
+            <div class="page-num">05 / 05</div>
+        </div>
+
+    </div>
+
+    <script>
+        // 简单的自动动画触发（可选）
+        document.querySelectorAll('.bar').forEach(bar => {
+            let h = bar.style.height;
+            bar.style.height = '0';
+            setTimeout(() => {
+                bar.style.height = h;
+            }, 500);
+        });
+    </script>
+</body>
+</html>
