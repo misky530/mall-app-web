@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { Refresh } from '@element-plus/icons-vue'
 import TrendChart from './components/TrendChart.vue'
 import {
@@ -10,6 +11,8 @@ import {
   generateMockOrdersIfNeeded,
   getAllB2BOrders
 } from '@/utils/reportData'
+
+const router = useRouter()
 
 // 关键指标数据
 const kpiData = ref({
@@ -92,6 +95,26 @@ const handleRefresh = () => {
   }, 1000)
 }
 
+// 跳转到对应的业务页面
+const goToPage = (statusName) => {
+  switch (statusName) {
+    case '待确认收款':
+      router.push('/agent/pending-verify')
+      break
+    case '已确认待发货':
+      router.push('/seller/orders')
+      break
+    case '已发货待验收':
+      router.push('/order/list')
+      break
+    case '待结算':
+      router.push('/agent/settlement')
+      break
+    default:
+      break
+  }
+}
+
 onMounted(() => {
   loadData()
 })
@@ -144,13 +167,22 @@ onMounted(() => {
           <div class="kpi-desc">Avg. Capital Cycle</div>
         </div>
 
-        <div class="kpi-card">
+        <div
+          class="kpi-card clickable"
+          @click="router.push('/agent')"
+          title="点击查看待处理业务"
+        >
           <div class="kpi-label">待处理业务</div>
           <div class="kpi-value orange">{{ kpiData.pendingCount }}<span class="unit">笔</span></div>
           <div class="kpi-desc">Pending Tasks</div>
         </div>
 
-        <div class="kpi-card" :class="{ alert: kpiData.riskCount > 0 }">
+        <div
+          class="kpi-card clickable"
+          :class="{ alert: kpiData.riskCount > 0 }"
+          @click="router.push('/agent/pending-verify')"
+          title="点击查看风险预警详情"
+        >
           <div class="kpi-label">风险预警</div>
           <div class="kpi-value" :class="{ red: kpiData.riskCount > 0 }">
             {{ kpiData.riskCount }}<span class="unit">项</span>
@@ -170,7 +202,9 @@ onMounted(() => {
           <div
             v-for="item in capitalDistribution"
             :key="item.name"
-            class="distribution-card"
+            class="distribution-card clickable"
+            @click="goToPage(item.name)"
+            :title="`点击查看${item.name}列表`"
           >
             <div class="card-header">
               <div class="status-indicator" :style="{ background: item.color }"></div>
@@ -358,6 +392,16 @@ $bg-gray: #fafafa;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
       }
 
+      &.clickable {
+        cursor: pointer;
+
+        &:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+          border-color: $primary-blue;
+        }
+      }
+
       &.primary {
         background: linear-gradient(135deg, $primary-blue 0%, #40a9ff 100%);
         border: none;
@@ -457,6 +501,21 @@ $bg-gray: #fafafa;
       border: 1px solid $border-color;
       border-radius: 4px;
       padding: 20px;
+      transition: all 0.3s;
+
+      &.clickable {
+        cursor: pointer;
+
+        &:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+          border-color: $primary-blue;
+
+          .card-header .status-name {
+            color: $primary-blue;
+          }
+        }
+      }
 
       .card-header {
         display: flex;
