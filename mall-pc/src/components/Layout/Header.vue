@@ -93,6 +93,8 @@ watch(
           <router-link to="/seller">卖家中心</router-link>
           <el-divider direction="vertical" />
           <router-link to="/agent">经办人中心</router-link>
+          <el-divider direction="vertical" />
+          <router-link to="/report" class="report-link">📊 数据看板</router-link>
         </div>
       </div>
     </div>

@@ -182,6 +182,16 @@ export default [
           requiresAuth: true
         }
       },
+      // 报表路由
+      {
+        path: 'report',
+        name: 'Report',
+        component: () => import('@/views/Report/Index.vue'),
+        meta: {
+          title: '资金池监控看板',
+          requiresAuth: true
+        }
+      },
       // 卖家路由
       {
         path: 'seller',
