@@ -186,9 +186,9 @@ export default [
       {
         path: 'report',
         name: 'Report',
-        component: () => import('@/views/Report/Index.vue'),
+        component: () => import('@/views/Report/Index_v2.vue'),
         meta: {
-          title: '资金池监控看板',
+          title: 'B2B托管交易监控看板',
           requiresAuth: true
         }
       },
