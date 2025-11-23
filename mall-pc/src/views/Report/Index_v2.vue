@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { Refresh } from '@element-plus/icons-vue'
+import TrendChart from './components/TrendChart.vue'
 import {
   getCapitalByStatus,
   getTodayStats,
@@ -259,6 +260,9 @@ onMounted(() => {
           </div>
         </div>
       </div>
+
+      <!-- 资金流动趋势图 -->
+      <TrendChart />
     </div>
   </div>
 </template>
