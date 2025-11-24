@@ -30,11 +30,8 @@ const goToCart = () => {
 
 // 跳转用户中心
 const goToProfile = () => {
-  if (userStore.isLogin) {
-    router.push('/user/profile')
-  } else {
-    router.push('/login')
-  }
+  // 演示模式：直接跳转到用户中心
+  router.push('/user/profile')
 }
 
 // 退出登录
@@ -74,20 +71,9 @@ watch(
     <div class="header-top">
       <div class="container flex-between">
         <div class="top-left">
-          <span>欢迎来到Mall商城！</span>
+          <span>欢迎来到Mall商城！演示模式</span>
         </div>
         <div class="top-right">
-          <template v-if="userStore.isLogin">
-            <span class="username">{{ userStore.username }}</span>
-            <el-divider direction="vertical" />
-            <a @click="handleLogout">退出</a>
-          </template>
-          <template v-else>
-            <router-link to="/login">登录</router-link>
-            <el-divider direction="vertical" />
-            <router-link to="/register">注册</router-link>
-          </template>
-          <el-divider direction="vertical" />
           <router-link to="/order/list">我的订单</router-link>
           <el-divider direction="vertical" />
           <router-link to="/seller">卖家中心</router-link>
@@ -135,7 +121,7 @@ watch(
             <el-icon :size="24">
               <User />
             </el-icon>
-            <span>{{ userStore.isLogin ? '我的' : '登录' }}</span>
+            <span>我的</span>
           </div>
         </div>
       </div>

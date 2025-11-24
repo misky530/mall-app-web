@@ -3,11 +3,33 @@ import { adminLogin, memberInfo } from '@/api/user'
 import { ElMessage } from 'element-plus'
 
 export const useUserStore = defineStore('user', {
-  state: () => ({
-    token: localStorage.getItem('token') || '',
-    tokenHead: localStorage.getItem('tokenHead') || 'Bearer ',
-    userInfo: JSON.parse(localStorage.getItem('userInfo') || '{}')
-  }),
+  state: () => {
+    // 演示模式：确保始终有token和用户信息
+    let token = localStorage.getItem('token')
+    let tokenHead = localStorage.getItem('tokenHead') || 'Bearer '
+    let userInfo = localStorage.getItem('userInfo')
+
+    if (!token) {
+      // 自动创建演示用户
+      token = 'demo_token_' + Date.now()
+      tokenHead = 'Bearer '
+      const demoUserInfo = {
+        username: 'demo',
+        icon: '',
+        nickName: '演示用户'
+      }
+      localStorage.setItem('token', token)
+      localStorage.setItem('tokenHead', tokenHead)
+      localStorage.setItem('userInfo', JSON.stringify(demoUserInfo))
+      userInfo = JSON.stringify(demoUserInfo)
+    }
+
+    return {
+      token,
+      tokenHead,
+      userInfo: JSON.parse(userInfo || '{}')
+    }
+  },
 
   getters: {
     // 是否已登录
