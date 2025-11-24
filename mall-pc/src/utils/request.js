@@ -14,12 +14,18 @@ const request = axios.create({
 // 请求拦截器
 request.interceptors.request.use(
   (config) => {
-    // 线上 API 不需要 token，但保留代码以便后续本地开发使用
-    // const token = localStorage.getItem('token')
-    // const tokenHead = localStorage.getItem('tokenHead') || 'Bearer '
-    // if (token) {
-    //   config.headers.Authorization = `${tokenHead}${token}`
-    // }
+    // 为需要认证的API添加token
+    const token = localStorage.getItem('token')
+    const tokenHead = localStorage.getItem('tokenHead') || 'Bearer '
+
+    // 标记是否发送了认证信息
+    config._hasAuth = false
+
+    if (token) {
+      config.headers.Authorization = `${tokenHead}${token}`
+      config._hasAuth = true
+    }
+
     return config
   },
   (error) => {
@@ -46,18 +52,25 @@ request.interceptors.response.use(
     console.error('响应错误：', error)
 
     if (error.response) {
-      const { status, data } = error.response
+      const { status, data, config } = error.response
 
       switch (status) {
         case 401:
-          // 未登录或token过期
-          ElMessage.error('登录已过期，请重新登录')
-          localStorage.removeItem('token')
-          localStorage.removeItem('userInfo')
-          router.push({
-            name: 'Login',
-            query: { redirect: router.currentRoute.value.fullPath }
-          })
+          // 只有在发送了认证信息的请求才处理401错误
+          // 避免未认证的API请求触发登出
+          if (config?._hasAuth) {
+            ElMessage.error('登录已过期，请重新登录')
+            localStorage.removeItem('token')
+            localStorage.removeItem('tokenHead')
+            localStorage.removeItem('userInfo')
+            router.push({
+              name: 'Login',
+              query: { redirect: router.currentRoute.value.fullPath }
+            })
+          } else {
+            // 未发送认证的请求返回401，静默失败
+            console.warn('未认证的API返回401，已忽略')
+          }
           break
         case 403:
           ElMessage.error('没有权限访问')
