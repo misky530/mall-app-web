@@ -19,10 +19,10 @@ class SearchEngine {
         { name: 'keywords', weight: 1.0 }       // 关键词
       ],
       
-      // 搜索参数
-      threshold: 0.4,              // 0.0=完全匹配, 1.0=全部匹配 (越小越严格)
-      distance: 100,               // 匹配距离
-      minMatchCharLength: 1,       // 最小匹配字符长度
+      // 搜索参数 - 优化数字匹配
+      threshold: 0.3,              // 降低阈值，更严格匹配（0.0=完全匹配, 1.0=全部匹配）
+      distance: 200,               // 增加匹配距离，允许更远的匹配
+      minMatchCharLength: 1,       // 最小匹配字符长度（支持单字符如数字）
       
       // 返回配置
       includeScore: true,          // 包含相关度分数
@@ -30,9 +30,38 @@ class SearchEngine {
       
       // 搜索算法
       useExtendedSearch: true,     // 启用高级搜索语法
-      ignoreLocation: true,        // 忽略位置
-      findAllMatches: true         // 查找所有匹配
+      ignoreLocation: false,       // 考虑匹配位置（改为false，提高准确性）
+      findAllMatches: true,        // 查找所有匹配
+      
+      // 位置配置
+      location: 0,                 // 期望匹配的位置
+      isCaseSensitive: false,      // 不区分大小写
+      shouldSort: true,            // 自动排序结果
+      
+      // 优化短关键词匹配（如数字）
+      getFn: (obj, path) => {
+        const value = this.getValueByPath(obj, path)
+        // 确保数字能被正确搜索
+        return value ? String(value) : ''
+      }
     }
+  }
+
+  /**
+   * 获取对象属性值的辅助函数
+   * @private
+   */
+  getValueByPath(obj, path) {
+    const keys = path.split('.')
+    let value = obj
+    for (const key of keys) {
+      if (value && typeof value === 'object' && key in value) {
+        value = value[key]
+      } else {
+        return undefined
+      }
+    }
+    return value
   }
 
   /**
@@ -46,7 +75,7 @@ class SearchEngine {
   }
 
   /**
-   * 多关键字搜索（AND逻辑）
+   * 多关键字搜索（AND逻辑） - 优化版
    * @param {String} query - 搜索查询字符串
    * @returns {Array} 搜索结果
    */
@@ -66,14 +95,41 @@ class SearchEngine {
       return this.fuse.search(keywords[0])
     }
 
-    // 多关键字 AND 搜索
+    // 多关键字智能搜索
     console.log(`🔍 多关键字搜索: ${keywords.join(' + ')}`)
     
-    let results = this.fuse.search(keywords[0])
+    // 方案1: 先尝试整体搜索（所有关键字作为一个查询）
+    const combinedQuery = keywords.join(' ')
+    let results = this.fuse.search(combinedQuery)
     
-    for (let i = 1; i < keywords.length; i++) {
-      const nextResults = this.fuse.search(keywords[i])
-      results = this.intersectResults(results, nextResults)
+    // 如果整体搜索结果较少，使用AND逻辑补充
+    if (results.length < 10) {
+      console.log(`📊 整体搜索结果较少 (${results.length}个)，使用AND逻辑补充...`)
+      
+      // 使用AND逻辑：逐个关键字搜索后取交集
+      let andResults = this.fuse.search(keywords[0])
+      
+      for (let i = 1; i < keywords.length; i++) {
+        const nextResults = this.fuse.search(keywords[i])
+        andResults = this.intersectResults(andResults, nextResults)
+      }
+      
+      // 合并结果并去重
+      const resultMap = new Map()
+      
+      // 先添加整体搜索的结果（优先级更高）
+      results.forEach(r => {
+        resultMap.set(r.item.id, r)
+      })
+      
+      // 再添加AND搜索的结果
+      andResults.forEach(r => {
+        if (!resultMap.has(r.item.id)) {
+          resultMap.set(r.item.id, r)
+        }
+      })
+      
+      results = Array.from(resultMap.values())
     }
 
     console.log(`✅ 找到 ${results.length} 个匹配结果`)
@@ -298,6 +354,70 @@ class SearchEngine {
   }
 
   /**
+   * 调试搜索 - 显示详细匹配信息
+   * @param {String} query - 搜索查询
+   * @returns {Object} 调试信息
+   */
+  debugSearch(query) {
+    if (!this.fuse || !query) {
+      return { error: '搜索引擎未初始化或查询为空' }
+    }
+
+    const keywords = query.trim().split(/\s+/)
+    const debugInfo = {
+      query,
+      keywords,
+      totalData: this.rawData.length,
+      results: []
+    }
+
+    // 测试每个关键字
+    keywords.forEach(keyword => {
+      const results = this.fuse.search(keyword)
+      debugInfo.results.push({
+        keyword,
+        count: results.length,
+        samples: results.slice(0, 3).map(r => ({
+          name: r.item.name,
+          score: r.score,
+          matches: r.matches?.map(m => ({
+            key: m.key,
+            value: m.value
+          }))
+        }))
+      })
+    })
+
+    // 整体搜索
+    const combinedResults = this.fuse.search(query)
+    debugInfo.combined = {
+      count: combinedResults.length,
+      samples: combinedResults.slice(0, 3).map(r => ({
+        name: r.item.name,
+        score: r.score
+      }))
+    }
+
+    // AND 搜索
+    if (keywords.length > 1) {
+      let andResults = this.fuse.search(keywords[0])
+      for (let i = 1; i < keywords.length; i++) {
+        const nextResults = this.fuse.search(keywords[i])
+        andResults = this.intersectResults(andResults, nextResults)
+      }
+      debugInfo.and = {
+        count: andResults.length,
+        samples: andResults.slice(0, 3).map(r => ({
+          name: r.item.name,
+          score: r.score
+        }))
+      }
+    }
+
+    return debugInfo
+  }
+
+  /**
    * 清空索引
    */
   clear() {
@@ -309,5 +429,19 @@ class SearchEngine {
 
 // 创建单例
 const searchEngine = new SearchEngine()
+
+// 暴露调试方法到全局（开发环境）
+if (typeof window !== 'undefined' && import.meta.env.DEV) {
+  window.__searchDebug = (query) => {
+    const result = searchEngine.debugSearch(query)
+    console.table(result.results)
+    console.log('整体搜索:', result.combined)
+    if (result.and) {
+      console.log('AND搜索:', result.and)
+    }
+    return result
+  }
+  console.log('💡 调试提示: 在控制台使用 __searchDebug("小米 65") 查看搜索详情')
+}
 
 export default searchEngine
