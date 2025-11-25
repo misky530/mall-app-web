@@ -6,8 +6,8 @@ import {
   Printer, DocumentCopy, Grid, List, Histogram, PieChart
 } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import * as XLSX from 'exceljs'
-import { jsPDF } from 'jspdf'
+import ExcelJS from 'exceljs'
+import jsPDF from 'jspdf'
 
 const route = useRoute()
 const router = useRouter()
@@ -204,7 +204,7 @@ const previewReport = () => {
 
 // 导出Excel
 const exportExcel = async () => {
-  const workbook = new XLSX.Workbook()
+  const workbook = new ExcelJS.Workbook()
   const worksheet = workbook.addWorksheet('报表数据')
   
   // 添加标题
