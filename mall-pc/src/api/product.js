@@ -32,11 +32,19 @@ export async function smartSearch(params, filters = {}) {
     const res = await searchProductList(params)
     
     if (res && res.data && res.data.list) {
-      console.log('✅ 后端搜索成功:', res.data.list.length, '个结果')
-      return {
-        list: res.data.list,
-        total: res.data.total || res.data.list.length,
-        source: 'api'
+      const resultCount = res.data.list.length
+      console.log('✅ 后端搜索成功:', resultCount, '个结果')
+      
+      // 🔑 关键优化：如果后端返回空结果，自动降级到前端搜索
+      if (resultCount === 0 && keyword) {
+        console.log('⚠️ 后端返回空结果，尝试前端智能搜索...')
+        // 继续执行下面的前端搜索逻辑
+      } else {
+        return {
+          list: res.data.list,
+          total: res.data.total || res.data.list.length,
+          source: 'api'
+        }
       }
     }
   } catch (error) {
