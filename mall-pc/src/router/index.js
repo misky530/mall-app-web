@@ -22,11 +22,14 @@ router.beforeEach((to, from, next) => {
     document.title = `${title} - ${import.meta.env.VITE_APP_TITLE || 'Mall商城'}`
   }
 
+  // 白名单：不需要登录的页面
+  const whiteList = ['/login', '/register']
+
   // B2B模式：强制登录
-  // 排除登录页和注册页
-  if (to.path !== '/login' && to.path !== '/register') {
+  if (!whiteList.includes(to.path)) {
     const token = localStorage.getItem('token')
     if (!token) {
+      console.log('未登录，跳转到登录页。当前路径：', to.path)
       // 未登录，跳转到登录页
       next({
         path: '/login',

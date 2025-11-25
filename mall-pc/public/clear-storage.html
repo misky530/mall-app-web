@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>清除本地存储</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    .container {
+      background: white;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+      text-align: center;
+      max-width: 400px;
+    }
+    h1 {
+      color: #333;
+      margin-bottom: 20px;
+    }
+    .info {
+      background: #f8f9fa;
+      padding: 16px;
+      border-radius: 8px;
+      margin: 20px 0;
+      text-align: left;
+    }
+    .info p {
+      margin: 8px 0;
+      font-size: 14px;
+      color: #666;
+    }
+    .info strong {
+      color: #333;
+    }
+    button {
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 12px 32px;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+      margin: 8px;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background: #5568d3;
+    }
+    .success {
+      background: #52c41a;
+    }
+    .success:hover {
+      background: #49ad17;
+    }
+    .message {
+      margin-top: 20px;
+      padding: 12px;
+      border-radius: 6px;
+      display: none;
+    }
+    .message.show {
+      display: block;
+    }
+    .message.success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔧 本地存储管理</h1>
+
+    <div class="info">
+      <p><strong>当前localStorage数据：</strong></p>
+      <p id="storage-info">加载中...</p>
+    </div>
+
+    <button onclick="checkStorage()">🔍 检查存储</button>
+    <button onclick="clearStorage()" class="success">🗑️ 清除所有数据</button>
+    <button onclick="goToLogin()">🔐 去登录</button>
+
+    <div id="message" class="message"></div>
+
+    <p style="margin-top: 20px; font-size: 12px; color: #999;">
+      清除后将需要重新登录
+    </p>
+  </div>
+
+  <script>
+    function checkStorage() {
+      const token = localStorage.getItem('token');
+      const userInfo = localStorage.getItem('userInfo');
+      const cartData = localStorage.getItem('mall_cart_list');
+
+      let info = '';
+      info += `Token: ${token ? '✓ 存在' : '✗ 不存在'}\n`;
+      info += `用户信息: ${userInfo ? '✓ 存在' : '✗ 不存在'}\n`;
+      info += `购物车: ${cartData ? '✓ 存在' : '✗ 不存在'}\n`;
+      info += `\n总计: ${localStorage.length} 个项目`;
+
+      document.getElementById('storage-info').innerText = info;
+
+      showMessage('已更新存储信息', 'success');
+    }
+
+    function clearStorage() {
+      if (confirm('确定要清除所有本地存储数据吗？这将删除登录信息、购物车等所有数据。')) {
+        localStorage.clear();
+        checkStorage();
+        showMessage('✓ 已清除所有本地存储数据！请重新登录。', 'success');
+      }
+    }
+
+    function goToLogin() {
+      window.location.href = '/login';
+    }
+
+    function showMessage(text, type) {
+      const msg = document.getElementById('message');
+      msg.textContent = text;
+      msg.className = 'message show ' + type;
+      setTimeout(() => {
+        msg.className = 'message';
+      }, 3000);
+    }
+
+    // 页面加载时检查存储
+    window.onload = checkStorage;
+  </script>
+</body>
+</html>
