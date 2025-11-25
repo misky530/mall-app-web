@@ -18,7 +18,7 @@ const handleSearch = () => {
     return
   }
   router.push({
-    name: 'ProductSearch',
+    name: 'ProductList',
     query: { keyword: searchKeyword.value }
   })
 }
