@@ -192,6 +192,24 @@ export default [
           requiresAuth: true
         }
       },
+      {
+        path: 'report/drill-down',
+        name: 'ReportDrillDown',
+        component: () => import('@/views/Report/DrillDown.vue'),
+        meta: {
+          title: '数据分析钻取',
+          requiresAuth: true
+        }
+      },
+      {
+        path: 'report/cross-analysis',
+        name: 'ReportCrossAnalysis',
+        component: () => import('@/views/Report/CrossAnalysis.vue'),
+        meta: {
+          title: '多维交叉分析',
+          requiresAuth: true
+        }
+      },
       // 卖家路由
       {
         path: 'seller',
