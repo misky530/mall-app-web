@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Refresh, TrendCharts, Grid } from '@element-plus/icons-vue'
+import { Refresh, TrendCharts, Grid, Edit } from '@element-plus/icons-vue'
 import TrendChart from './components/TrendChart.vue'
 import {
   getCapitalByStatus,
@@ -132,6 +132,9 @@ onMounted(() => {
           </div>
           <div class="header-right">
             <span class="update-time">数据更新时间：{{ new Date().toLocaleString('zh-CN') }}</span>
+            <el-button :icon="Edit" @click="router.push('/report/management')" type="warning">
+              报表设计
+            </el-button>
             <el-button :icon="TrendCharts" @click="router.push('/report/drill-down')" type="success">
               数据分析
             </el-button>

@@ -193,6 +193,33 @@ export default [
         }
       },
       {
+        path: 'report/management',
+        name: 'ReportManagement',
+        component: () => import('@/views/Report/Management.vue'),
+        meta: {
+          title: '专业报表系统',
+          requiresAuth: true
+        }
+      },
+      {
+        path: 'report/designer',
+        name: 'ReportDesigner',
+        component: () => import('@/views/Report/Designer.vue'),
+        meta: {
+          title: '报表设计器',
+          requiresAuth: true
+        }
+      },
+      {
+        path: 'report/preview',
+        name: 'ReportPreview',
+        component: () => import('@/views/Report/Preview.vue'),
+        meta: {
+          title: '报表预览',
+          requiresAuth: true
+        }
+      },
+      {
         path: 'report/drill-down',
         name: 'ReportDrillDown',
         component: () => import('@/views/Report/DrillDown.vue'),
