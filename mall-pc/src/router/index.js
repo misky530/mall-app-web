@@ -22,21 +22,18 @@ router.beforeEach((to, from, next) => {
     document.title = `${title} - ${import.meta.env.VITE_APP_TITLE || 'Mall商城'}`
   }
 
-  // 演示模式：自动创建演示用户token（屏蔽登录功能）
-  const token = localStorage.getItem('token')
-  if (!token) {
-    // 自动创建演示用户
-    const demoToken = 'demo_token_' + Date.now()
-    localStorage.setItem('token', demoToken)
-    localStorage.setItem('tokenHead', 'Bearer ')
-
-    const demoUserInfo = {
-      username: 'demo',
-      icon: '',
-      nickName: '演示用户'
+  // B2B模式：强制登录
+  // 排除登录页和注册页
+  if (to.path !== '/login' && to.path !== '/register') {
+    const token = localStorage.getItem('token')
+    if (!token) {
+      // 未登录，跳转到登录页
+      next({
+        path: '/login',
+        query: { redirect: to.fullPath }
+      })
+      return
     }
-    localStorage.setItem('userInfo', JSON.stringify(demoUserInfo))
-    console.log('演示模式：已自动创建演示用户')
   }
 
   next()

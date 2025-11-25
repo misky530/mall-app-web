@@ -30,8 +30,11 @@ const goToCart = () => {
 
 // 跳转用户中心
 const goToProfile = () => {
-  // 演示模式：直接跳转到用户中心
-  router.push('/user/profile')
+  if (userStore.isLogin) {
+    router.push('/user/profile')
+  } else {
+    router.push('/login')
+  }
 }
 
 // 退出登录
@@ -40,7 +43,8 @@ const handleLogout = () => {
   // 退出后清空购物车
   cartStore.cartList = []
   cartStore.selectedIds = []
-  router.push('/')
+  // 跳转到登录页
+  router.push('/login')
 }
 
 // 如果已登录，获取购物车数据
@@ -71,9 +75,15 @@ watch(
     <div class="header-top">
       <div class="container flex-between">
         <div class="top-left">
-          <span>欢迎来到Mall商城！演示模式</span>
+          <span>欢迎来到Mall B2B托管交易系统！</span>
         </div>
         <div class="top-right">
+          <template v-if="userStore.isLogin">
+            <span class="username">{{ userStore.username || '用户' }}</span>
+            <el-divider direction="vertical" />
+            <a @click="handleLogout">退出登录</a>
+            <el-divider direction="vertical" />
+          </template>
           <router-link to="/order/list">我的订单</router-link>
           <el-divider direction="vertical" />
           <router-link to="/seller">卖家中心</router-link>

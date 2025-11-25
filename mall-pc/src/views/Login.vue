@@ -75,8 +75,8 @@ const goToRegister = () => {
       <div class="login-card">
         <!-- Logo 和标题 -->
         <div class="login-header">
-          <h1 class="login-title">商城管理系统</h1>
-          <p class="login-subtitle">欢迎登录</p>
+          <h1 class="login-title">B2B托管交易系统</h1>
+          <p class="login-subtitle">安全 · 高效 · 可信</p>
         </div>
 
         <!-- 登录表单 -->
@@ -121,8 +121,10 @@ const goToRegister = () => {
 
         <!-- 提示信息 -->
         <div class="login-tips">
-          <p>测试账号：admin</p>
-          <p>测试密码：macro123</p>
+          <p class="tips-title">💡 演示账号</p>
+          <p>用户名：admin</p>
+          <p>密码：macro123</p>
+          <p class="tips-note">系统使用线上API + 本地存储混合模式</p>
         </div>
       </div>
     </div>
@@ -191,10 +193,25 @@ const goToRegister = () => {
         border-radius: 8px;
         text-align: center;
 
+        .tips-title {
+          font-size: 14px;
+          font-weight: 600;
+          color: $text-primary;
+          margin-bottom: 8px;
+        }
+
         p {
           font-size: 13px;
           color: $text-secondary;
           margin: 4px 0;
+        }
+
+        .tips-note {
+          margin-top: 12px;
+          padding-top: 12px;
+          border-top: 1px solid #e5e7eb;
+          font-size: 12px;
+          color: #9ca3af;
         }
       }
 
