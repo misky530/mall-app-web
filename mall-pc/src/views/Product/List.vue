@@ -231,11 +231,10 @@ const fetchProductList = async () => {
         })
       }
     }
-    }
   } catch (error) {
     console.error('获取商品列表失败：', error)
-    productList.value = generateMockProducts()
-    pagination.value.total = 96
+    productList.value = []
+    pagination.value.total = 0
   } finally {
     loading.value = false
   }
