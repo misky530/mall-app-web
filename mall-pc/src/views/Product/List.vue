@@ -44,7 +44,7 @@ const hotBrands = ref([
   { id: 6, name: 'vivo', logo: '' },
   { id: 7, name: '荣耀', logo: '' },
   { id: 8, name: '真我', logo: '' }
-])
+]);
 
 // 热门分类（京东风格）
 const hotCategories = ref([
@@ -54,7 +54,7 @@ const hotCategories = ref([
   { id: 104, name: '老人机' },
   { id: 105, name: '学生手机' },
   { id: 106, name: '商务手机' }
-])
+]);
 
 // 价格区间
 const priceRanges = [
@@ -64,7 +64,7 @@ const priceRanges = [
   { label: '2000-3000', min: 2000, max: 3000 },
   { label: '3000-5000', min: 3000, max: 5000 },
   { label: '5000以上', min: 5000, max: null }
-]);
+];
 
 // 商品属性筛选（京东风格）
 const productAttrs = ref([
