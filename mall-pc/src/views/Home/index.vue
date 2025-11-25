@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ArrowRight } from '@element-plus/icons-vue'
 import ProductCard from '@/components/Product/ProductCard.vue'
@@ -18,23 +18,282 @@ const brandList = ref([])
 // 秒杀专区
 const homeFlashPromotion = ref(null)
 
-// 分类数据（将从 API 获取）
-const categoryList = ref([])
+// B2B分类数据（京东风格）
+const categoryList = ref([
+  {
+    id: 1,
+    name: '电脑/办公',
+    icon: '💻',
+    children: [
+      {
+        id: 11,
+        name: '电脑整机',
+        items: ['台式机', '笔记本', '平板电脑', '服务器/工作站', '游戏本', '超极本']
+      },
+      {
+        id: 12,
+        name: '电脑配件',
+        items: ['CPU', '主板', '显卡', '内存', '硬盘', '电源', '机箱', '散热器']
+      },
+      {
+        id: 13,
+        name: '外设产品',
+        items: ['鼠标', '键盘', '显示器', '音箱', '耳机', '摄像头', '手写板']
+      },
+      {
+        id: 14,
+        name: '网络产品',
+        items: ['路由器', '网卡', '交换机', '网络存储', '4G/5G上网']
+      }
+    ]
+  },
+  {
+    id: 2,
+    name: '手机/数码',
+    icon: '📱',
+    children: [
+      {
+        id: 21,
+        name: '手机通讯',
+        items: ['手机', '游戏手机', '老人机', '对讲机', '以旧换新', '手机维修']
+      },
+      {
+        id: 22,
+        name: '运营商',
+        items: ['合约机', '选号中心', '装宽带', '办套餐']
+      },
+      {
+        id: 23,
+        name: '手机配件',
+        items: ['手机壳', '贴膜', '充电器', '数据线', '移动电源', '车载配件']
+      },
+      {
+        id: 24,
+        name: '摄影摄像',
+        items: ['数码相机', '单反相机', '摄像机', '拍立得', '运动相机', '镜头']
+      }
+    ]
+  },
+  {
+    id: 3,
+    name: '家用电器',
+    icon: '🏠',
+    children: [
+      {
+        id: 31,
+        name: '大家电',
+        items: ['平板电视', '空调', '冰箱', '洗衣机', '热水器', '油烟机']
+      },
+      {
+        id: 32,
+        name: '生活电器',
+        items: ['吸尘器', '扫地机器人', '净化器', '加湿器', '挂烫机', '电风扇']
+      },
+      {
+        id: 33,
+        name: '厨房电器',
+        items: ['电饭煲', '电磁炉', '微波炉', '烤箱', '豆浆机', '咖啡机']
+      },
+      {
+        id: 34,
+        name: '个护健康',
+        items: ['剃须刀', '电动牙刷', '美容仪', '按摩椅', '体重秤', '血压计']
+      }
+    ]
+  },
+  {
+    id: 4,
+    name: '家居/家具/家装',
+    icon: '🛋️',
+    children: [
+      {
+        id: 41,
+        name: '家具',
+        items: ['沙发', '床', '床垫', '衣柜', '电视柜', '茶几', '餐桌', '书桌']
+      },
+      {
+        id: 42,
+        name: '家纺',
+        items: ['四件套', '被子', '枕头', '毛巾', '浴巾', '地毯', '窗帘']
+      },
+      {
+        id: 43,
+        name: '灯具',
+        items: ['台灯', '吸顶灯', '筒灯', '射灯', '落地灯', '装饰灯', 'LED灯']
+      },
+      {
+        id: 44,
+        name: '厨具',
+        items: ['锅具', '刀具', '餐具', '水具', '保鲜盒', '收纳用品']
+      }
+    ]
+  },
+  {
+    id: 5,
+    name: '汽车/用品',
+    icon: '🚗',
+    children: [
+      {
+        id: 51,
+        name: '汽车装饰',
+        items: ['脚垫', '座垫', '座套', '方向盘套', '香水', '车贴', '车衣']
+      },
+      {
+        id: 52,
+        name: '电子电器',
+        items: ['行车记录仪', '车载充电器', '车载支架', '车载冰箱', '胎压监测']
+      },
+      {
+        id: 53,
+        name: '维修保养',
+        items: ['机油', '添加剂', '防冻液', '雨刷', '车蜡', '洗车用品']
+      },
+      {
+        id: 54,
+        name: '安全自驾',
+        items: ['安全座椅', '充气泵', '应急救援', '防盗设备', '车载工具']
+      }
+    ]
+  },
+  {
+    id: 6,
+    name: '食品/酒类',
+    icon: '🍎',
+    children: [
+      {
+        id: 61,
+        name: '休闲食品',
+        items: ['坚果炒货', '糖果/巧克力', '饼干蛋糕', '肉干肉脯', '豆干素食']
+      },
+      {
+        id: 62,
+        name: '茶叶/咖啡',
+        items: ['绿茶', '红茶', '乌龙茶', '普洱', '花茶', '咖啡豆', '速溶咖啡']
+      },
+      {
+        id: 63,
+        name: '酒类',
+        items: ['白酒', '葡萄酒', '洋酒', '啤酒', '黄酒/米酒', '养生酒']
+      },
+      {
+        id: 64,
+        name: '生鲜食品',
+        items: ['水果', '蔬菜', '肉禽蛋', '海鲜水产', '速冻食品', '方便食品']
+      }
+    ]
+  },
+  {
+    id: 7,
+    name: '服饰/鞋靴',
+    icon: '👔',
+    children: [
+      {
+        id: 71,
+        name: '男装',
+        items: ['衬衫', 'T恤', '夹克', '卫衣', '毛衣', '羽绒服', '西服', '牛仔裤']
+      },
+      {
+        id: 72,
+        name: '女装',
+        items: ['连衣裙', '半身裙', '毛呢大衣', '羽绒服', '棉服', '毛衣', '打底裤']
+      },
+      {
+        id: 73,
+        name: '鞋靴',
+        items: ['男鞋', '女鞋', '运动鞋', '休闲鞋', '皮鞋', '靴子', '帆布鞋']
+      },
+      {
+        id: 74,
+        name: '箱包',
+        items: ['双肩包', '单肩包', '手提包', '钱包', '行李箱', '旅行包']
+      }
+    ]
+  },
+  {
+    id: 8,
+    name: '母婴/玩具',
+    icon: '🍼',
+    children: [
+      {
+        id: 81,
+        name: '奶粉/辅食',
+        items: ['奶粉', '营养辅食', '营养品', '米粉/菜粉', '果泥/果汁']
+      },
+      {
+        id: 82,
+        name: '纸品/洗护',
+        items: ['纸尿裤', '湿巾', '洗发沐浴', '日常护理', '座便器']
+      },
+      {
+        id: 83,
+        name: '童装童鞋',
+        items: ['婴儿装', '儿童装', '童鞋', '配饰', '亲子装']
+      },
+      {
+        id: 84,
+        name: '玩具',
+        items: ['积木拼插', '遥控/电动', '毛绒玩具', '益智玩具', '模型玩具']
+      }
+    ]
+  },
+  {
+    id: 9,
+    name: '运动/户外',
+    icon: '⚽',
+    children: [
+      {
+        id: 91,
+        name: '运动鞋服',
+        items: ['跑步鞋', '篮球鞋', '足球鞋', '运动服', '运动包']
+      },
+      {
+        id: 92,
+        name: '健身器材',
+        items: ['跑步机', '健身车', '哑铃', '瑜伽垫', '拉力器', '仰卧板']
+      },
+      {
+        id: 93,
+        name: '户外装备',
+        items: ['帐篷/睡袋', '登山装备', '钓鱼用品', '骑行装备', '滑雪装备']
+      },
+      {
+        id: 94,
+        name: '体育用品',
+        items: ['篮球', '足球', '羽毛球', '乒乓球', '网球', '游泳用品']
+      }
+    ]
+  },
+  {
+    id: 10,
+    name: '图书/文娱',
+    icon: '📚',
+    children: [
+      {
+        id: 101,
+        name: '图书',
+        items: ['小说', '文学', '经管励志', '人文社科', '历史', '艺术', '科技']
+      },
+      {
+        id: 102,
+        name: '文化用品',
+        items: ['笔', '本册', '文件夹', '书包', '计算器', '订书机']
+      },
+      {
+        id: 103,
+        name: '乐器',
+        items: ['吉他', '钢琴', '古筝', '小提琴', '架子鼓', '电子琴', '口琴']
+      },
+      {
+        id: 104,
+        name: '电子书',
+        items: ['电子书阅读器', '电子书', '网络文学', '数字杂志']
+      }
+    ]
+  }
+])
 
-// 分类图标映射
-const categoryIcons = {
-  '服装': '👔',
-  '手机数码': '📱',
-  '家用电器': '🏠',
-  '家具家装': '🛋️',
-  '汽车用品': '🚗',
-  '电脑办公': '💻',
-  '美妆': '💄',
-  '食品': '🍎',
-  '运动': '⚽',
-  '图书': '📚',
-  '母婴': '🍼'
-}
+// 当前悬浮的分类
+const currentHoverCategory = ref(null)
 
 // 推荐商品
 const recommendList = ref([])
@@ -56,7 +315,6 @@ const updateFlashCountdown = () => {
   const endTime = new Date(homeFlashPromotion.value.endTime)
   const now = new Date()
 
-  // 设置今天的结束时间
   const today = new Date()
   today.setHours(endTime.getHours())
   today.setMinutes(endTime.getMinutes())
@@ -78,67 +336,37 @@ const formatTime = (num) => {
   return num.toString().padStart(2, '0')
 }
 
-// Mock 商品数据生成
-const generateMockProducts = (count, prefix) => {
-  const products = []
-  const baseTime = Date.now()
-
-  for (let i = 1; i <= count; i++) {
-    products.push({
-      id: baseTime + i,
-      name: `${prefix}商品 ${i}`,
-      subTitle: '精选优质商品，品质保证',
-      price: Math.floor(Math.random() * 500) + 50,
-      originalPrice: Math.floor(Math.random() * 800) + 200,
-      pic: `https://images.unsplash.com/photo-${1600000000000 + (baseTime % 1000) * 1000 + i * 10000}?w=300&h=300&fit=crop&auto=format`,
-      sale: Math.floor(Math.random() * 5000),
-      stock: Math.floor(Math.random() * 100) + 20,
-      newStatus: prefix === '新品' ? 1 : 0,
-      recommendStatus: prefix === '推荐' ? 1 : 0
-    })
-  }
-  return products
-}
-
 // 获取首页数据
 const fetchHomeData = async () => {
   loading.value = true
   try {
-    // 使用 /home/content API 一次性获取所有首页数据
     const contentRes = await homeApi.fetchContent()
     if (contentRes && contentRes.data) {
       const data = contentRes.data
 
-      // 轮播图
       if (data.advertiseList && data.advertiseList.length > 0) {
         bannerList.value = data.advertiseList
       }
 
-      // 品牌列表
       if (data.brandList && data.brandList.length > 0) {
         brandList.value = data.brandList
       }
 
-      // 秒杀专区
       if (data.homeFlashPromotion) {
         homeFlashPromotion.value = data.homeFlashPromotion
-        // 开始倒计时
         updateFlashCountdown()
         setInterval(updateFlashCountdown, 1000)
       }
 
-      // 新品列表
       if (data.newProductList && data.newProductList.length > 0) {
         newProductList.value = data.newProductList
       }
 
-      // 热销商品
       if (data.hotProductList && data.hotProductList.length > 0) {
         hotProductList.value = data.hotProductList
       }
     }
 
-    // 单独获取推荐商品（使用独立API支持分页）
     try {
       const recommendRes = await homeApi.fetchRecommendProductList({ pageNum: 1, pageSize: 8 })
       if (recommendRes && recommendRes.data) {
@@ -146,23 +374,6 @@ const fetchHomeData = async () => {
       }
     } catch (error) {
       console.warn('推荐商品API失败', error)
-    }
-
-    // 获取分类
-    try {
-      const categoryRes = await homeApi.fetchProductCateList(0)
-      if (categoryRes && categoryRes.data && categoryRes.data.length > 0) {
-        // 添加图标到分类数据
-        const categoriesWithIcon = categoryRes.data.map(cat => ({
-          ...cat,
-          icon: categoryIcons[cat.name] || '📦',
-          count: cat.productCount || 0
-        }))
-        categoryList.value = categoriesWithIcon
-        productStore.setCategoryList(categoryRes.data)
-      }
-    } catch (error) {
-      console.warn('分类API失败', error)
     }
   } catch (error) {
     console.error('获取首页数据失败：', error)
@@ -172,50 +383,38 @@ const fetchHomeData = async () => {
 }
 
 // 跳转到分类
-const goToCategory = (category) => {
+const goToCategory = (category, subItem = null) => {
+  console.log('跳转到分类：', category.name, subItem)
   router.push({
     path: '/product/list',
-    query: { categoryId: category.id, categoryName: category.name }
+    query: {
+      categoryId: category.id,
+      categoryName: subItem || category.name
+    }
   })
 }
 
-// 跳转到新品列表
-const goToNewProductList = () => {
-  router.push({
-    path: '/product/list',
-    query: { type: 'new' }
-  })
+// 鼠标进入分类
+const handleCategoryEnter = (category) => {
+  currentHoverCategory.value = category
 }
 
-// 跳转到热销商品列表
-const goToHotProductList = () => {
-  router.push({
-    path: '/product/list',
-    query: { type: 'hot' }
-  })
-}
-
-// 查看更多
-const viewMore = (type) => {
-  if (type === 'new') {
-    goToNewProductList()
-  } else if (type === 'hot') {
-    goToHotProductList()
-  } else {
-    console.log('查看更多：', type)
-  }
+// 鼠标离开分类区域
+const handleCategoryLeave = () => {
+  currentHoverCategory.value = null
 }
 
 // 跳转到品牌详情
 const goToBrand = (brand) => {
-  // 暂时跳转到商品列表，按品牌筛选
-  // 后续可以添加品牌详情页
   console.log('跳转到品牌：', brand.name)
 }
 
-// 跳转到商品详情
-const goToProduct = (product) => {
-  router.push(`/product/detail/${product.id}`)
+// 查看更多
+const viewMore = (type) => {
+  router.push({
+    path: '/product/list',
+    query: { type }
+  })
 }
 
 onMounted(() => {
@@ -225,15 +424,62 @@ onMounted(() => {
 
 <template>
   <div class="home-page" v-loading="loading">
-    <!-- 轮播图 -->
+    <!-- 顶部Banner区域 -->
     <section class="banner-section">
       <div class="container">
-        <el-carousel height="400px" :interval="4000" arrow="always">
-          <el-carousel-item v-for="item in bannerList" :key="item.id">
-            <div class="banner-item" :style="{ backgroundImage: `url(${item.pic})` }">
+        <div class="banner-wrapper">
+          <!-- 左侧分类导航 (京东风格) -->
+          <div class="category-nav" @mouseleave="handleCategoryLeave">
+            <div
+              v-for="category in categoryList"
+              :key="category.id"
+              class="category-item"
+              @mouseenter="handleCategoryEnter(category)"
+              @click="goToCategory(category)"
+            >
+              <span class="category-icon">{{ category.icon }}</span>
+              <span class="category-name">{{ category.name }}</span>
+              <el-icon class="category-arrow"><ArrowRight /></el-icon>
+
+              <!-- 子分类悬浮层 -->
+              <transition name="slide-fade">
+                <div
+                  v-if="currentHoverCategory && currentHoverCategory.id === category.id"
+                  class="category-submenu"
+                  @click.stop
+                >
+                  <div
+                    v-for="child in category.children"
+                    :key="child.id"
+                    class="submenu-group"
+                  >
+                    <div class="submenu-title">{{ child.name }}</div>
+                    <div class="submenu-items">
+                      <span
+                        v-for="(item, index) in child.items"
+                        :key="index"
+                        class="submenu-item"
+                        @click="goToCategory(category, item)"
+                      >
+                        {{ item }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </transition>
             </div>
-          </el-carousel-item>
-        </el-carousel>
+          </div>
+
+          <!-- 右侧轮播图 -->
+          <div class="banner-carousel">
+            <el-carousel height="470px" :interval="4000" arrow="hover">
+              <el-carousel-item v-for="item in bannerList" :key="item.id">
+                <div class="banner-item" :style="{ backgroundImage: `url(${item.pic})` }">
+                </div>
+              </el-carousel-item>
+            </el-carousel>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -243,12 +489,12 @@ onMounted(() => {
         <div class="section-header">
           <div>
             <h2>品牌制造商直供</h2>
-            <p>工厂直达消费者，剔除品牌溢价</p>
+            <p>工厂直达企业，批量采购更优惠</p>
           </div>
         </div>
         <div class="brand-grid">
           <div
-            v-for="brand in brandList"
+            v-for="brand in brandList.slice(0, 6)"
             :key="brand.id"
             class="brand-item"
             @click="goToBrand(brand)"
@@ -263,30 +509,13 @@ onMounted(() => {
       </div>
     </section>
 
-    <!-- 商品分类 -->
-    <section v-if="categoryList.length > 0" class="category-section">
-      <div class="container">
-        <div class="category-list">
-          <div
-            v-for="category in categoryList.slice(0, 8)"
-            :key="category.id"
-            class="category-item"
-            @click="goToCategory(category)"
-          >
-            <div class="category-icon">{{ category.icon }}</div>
-            <div class="category-name">{{ category.name }}</div>
-          </div>
-        </div>
-      </div>
-    </section>
-
     <!-- 秒杀专区 -->
     <section v-if="homeFlashPromotion && homeFlashPromotion.productList && homeFlashPromotion.productList.length > 0" class="product-section flash-section">
       <div class="container">
         <div class="section-header">
           <div class="flash-header-left">
-            <h2>⚡ 秒杀专区</h2>
-            <p>限时抢购，手慢无</p>
+            <h2>⚡ 限时秒杀</h2>
+            <p>批量采购，价格更优</p>
           </div>
           <div class="flash-countdown">
             <span class="countdown-label">本场结束剩余：</span>
@@ -313,7 +542,7 @@ onMounted(() => {
         <div class="section-header">
           <div>
             <h2>精选推荐</h2>
-            <p>为您精心挑选的优质商品</p>
+            <p>企业采购精选，品质保证</p>
           </div>
           <el-button text @click="viewMore('recommend')">
             查看更多
@@ -337,7 +566,7 @@ onMounted(() => {
         <div class="section-header">
           <div>
             <h2>新品上市</h2>
-            <p>最新鲜的商品，抢先体验</p>
+            <p>最新商品，抢先采购</p>
           </div>
           <el-button text @click="viewMore('new')">
             查看更多
@@ -361,7 +590,7 @@ onMounted(() => {
         <div class="section-header">
           <div>
             <h2>热销榜单</h2>
-            <p>人气爆款，销量领先</p>
+            <p>企业热购，销量领先</p>
           </div>
           <el-button text @click="viewMore('hot')">
             查看更多
@@ -379,34 +608,34 @@ onMounted(() => {
       </div>
     </section>
 
-    <!-- 品牌故事 -->
-    <section class="brand-section">
+    <!-- B2B服务保障 -->
+    <section class="service-section">
       <div class="container">
-        <div class="brand-content">
-          <div class="brand-text">
-            <h2>Mall商城</h2>
-            <h3>品质生活，从这里开始</h3>
+        <div class="service-content">
+          <div class="service-text">
+            <h2>B2B企业采购平台</h2>
+            <h3>专业 · 高效 · 可信赖</h3>
             <p>
-              我们致力于为您提供优质的商品和服务，让购物变得更加简单、便捷、愉悦。
-              精选全球好物，严格品控，只为给您最好的购物体验。
+              专注企业采购服务，提供一站式采购解决方案。从询价、下单、支付到物流配送，
+              全程托管交易保障，让企业采购更安全、更便捷、更高效。
             </p>
-            <div class="brand-features">
+            <div class="service-features">
               <div class="feature-item">
                 <div class="feature-number">100%</div>
                 <div class="feature-text">正品保证</div>
               </div>
               <div class="feature-item">
-                <div class="feature-number">24h</div>
-                <div class="feature-text">快速发货</div>
+                <div class="feature-number">托管</div>
+                <div class="feature-text">交易保障</div>
               </div>
               <div class="feature-item">
-                <div class="feature-number">7天</div>
-                <div class="feature-text">无理由退换</div>
+                <div class="feature-number">7×24h</div>
+                <div class="feature-text">专属服务</div>
               </div>
             </div>
           </div>
-          <div class="brand-image">
-            <img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=600&h=400&fit=crop" alt="品牌形象" />
+          <div class="service-image">
+            <img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=600&h=400&fit=crop" alt="B2B服务" />
           </div>
         </div>
       </div>
@@ -421,20 +650,143 @@ onMounted(() => {
   background: #f5f5f5;
 }
 
-// 轮播图区域
+// Banner区域
 .banner-section {
   background: white;
-  padding: 20px 0;
+  padding: 0;
+
+  .banner-wrapper {
+    display: flex;
+    gap: 0;
+    position: relative;
+    padding: 20px 0;
+  }
+}
+
+// 左侧分类导航（京东风格）
+.category-nav {
+  width: 200px;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 8px 0 0 8px;
+  overflow: hidden;
+  flex-shrink: 0;
+
+  .category-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.1);
+
+      .category-arrow {
+        transform: translateX(4px);
+      }
+    }
+
+    .category-icon {
+      font-size: 20px;
+      margin-right: 10px;
+    }
+
+    .category-name {
+      flex: 1;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .category-arrow {
+      font-size: 14px;
+      transition: transform 0.3s;
+    }
+  }
+}
+
+// 子分类悬浮层
+.category-submenu {
+  position: absolute;
+  left: 100%;
+  top: 0;
+  width: 730px;
+  min-height: 470px;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-left: none;
+  border-radius: 0 8px 8px 0;
+  padding: 20px 24px;
+  z-index: 1000;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+
+  .submenu-group {
+    margin-bottom: 24px;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    .submenu-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .submenu-items {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 16px;
+
+      .submenu-item {
+        font-size: 13px;
+        color: #666;
+        cursor: pointer;
+        transition: color 0.3s;
+        white-space: nowrap;
+
+        &:hover {
+          color: $primary-color;
+        }
+      }
+    }
+  }
+}
+
+// 动画效果
+.slide-fade-enter-active,
+.slide-fade-leave-active {
+  transition: all 0.2s ease;
+}
+
+.slide-fade-enter-from {
+  opacity: 0;
+  transform: translateX(-10px);
+}
+
+.slide-fade-leave-to {
+  opacity: 0;
+  transform: translateX(-10px);
+}
+
+// 轮播图
+.banner-carousel {
+  flex: 1;
 
   .banner-item {
     height: 100%;
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
+    border-radius: 0 8px 8px 0;
   }
 }
 
-// 品牌区域（顶部）
+// 品牌区域
 .brand-section-top {
   padding: 60px 0;
   background: white;
@@ -543,62 +895,6 @@ onMounted(() => {
       }
     }
   }
-
-  // Override general section-header styles for flash section
-  &.product-section .section-header {
-    h2 {
-      color: #ff4757 !important;
-    }
-    p {
-      color: #ff6b6b !important;
-    }
-  }
-}
-
-// 分类区域
-.category-section {
-  padding: 30px 0;
-  background: white;
-
-  .category-list {
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 20px;
-
-    .category-item {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      cursor: pointer;
-      transition: all 0.3s;
-
-      &:hover {
-        transform: translateY(-4px);
-
-        .category-icon {
-          transform: scale(1.1);
-        }
-
-        .category-name {
-          color: $primary-color;
-        }
-      }
-
-      .category-icon {
-        font-size: 56px;
-        margin-bottom: 12px;
-        transition: transform 0.3s;
-      }
-
-      .category-name {
-        font-size: 14px;
-        color: $text-primary;
-        transition: color 0.3s;
-      }
-    }
-  }
 }
 
 // 商品区域通用样式
@@ -636,19 +932,19 @@ onMounted(() => {
   }
 }
 
-// 品牌区域
-.brand-section {
+// 服务保障区域
+.service-section {
   padding: 80px 0;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
 
-  .brand-content {
+  .service-content {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 60px;
     align-items: center;
 
-    .brand-text {
+    .service-text {
       h2 {
         font-size: 48px;
         font-weight: bold;
@@ -668,7 +964,7 @@ onMounted(() => {
         margin-bottom: 40px;
       }
 
-      .brand-features {
+      .service-features {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
         gap: 30px;
@@ -690,7 +986,7 @@ onMounted(() => {
       }
     }
 
-    .brand-image {
+    .service-image {
       img {
         width: 100%;
         border-radius: $border-radius-large;
@@ -702,25 +998,29 @@ onMounted(() => {
 
 // 响应式设计
 @media (max-width: 1200px) {
-  .category-grid {
-    grid-template-columns: repeat(4, 1fr) !important;
-  }
-
   .product-grid {
     grid-template-columns: repeat(3, 1fr) !important;
+  }
+
+  .brand-grid {
+    grid-template-columns: repeat(4, 1fr) !important;
   }
 }
 
 @media (max-width: 768px) {
-  .category-grid {
-    grid-template-columns: repeat(4, 1fr) !important;
+  .banner-wrapper {
+    flex-direction: column;
+  }
+
+  .category-nav {
+    width: 100% !important;
   }
 
   .product-grid {
     grid-template-columns: repeat(2, 1fr) !important;
   }
 
-  .brand-content {
+  .service-content {
     grid-template-columns: 1fr !important;
   }
 }
