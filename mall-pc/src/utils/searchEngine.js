@@ -36,32 +36,8 @@ class SearchEngine {
       // 位置配置
       location: 0,                 // 期望匹配的位置
       isCaseSensitive: false,      // 不区分大小写
-      shouldSort: true,            // 自动排序结果
-      
-      // 优化短关键词匹配（如数字）
-      getFn: (obj, path) => {
-        const value = this.getValueByPath(obj, path)
-        // 确保数字能被正确搜索
-        return value ? String(value) : ''
-      }
+      shouldSort: true             // 自动排序结果
     }
-  }
-
-  /**
-   * 获取对象属性值的辅助函数
-   * @private
-   */
-  getValueByPath(obj, path) {
-    const keys = path.split('.')
-    let value = obj
-    for (const key of keys) {
-      if (value && typeof value === 'object' && key in value) {
-        value = value[key]
-      } else {
-        return undefined
-      }
-    }
-    return value
   }
 
   /**
