@@ -6,31 +6,33 @@
 
 ## 登录实现方式
 
-### 混合模式：线上API + 本地存储
+### 演示模式：Mock登录 + 本地存储
 
-系统采用智能降级策略：
+系统采用完全本地化的演示模式：
 
-1. **优先使用线上API**：
-   - 首先尝试调用线上登录API (`https://portal-api.macrozheng.com`)
-   - 如果API调用成功，使用真实的token和用户信息
+1. **Mock登录认证**：
+   - 使用本地预设的演示账号进行验证
+   - 无需依赖外部API
+   - 生成本地Mock token用于会话管理
 
-2. **自动降级到Mock模式**：
-   - 如果API调用失败（网络错误、服务器问题等）
-   - 自动切换到本地Mock验证
-   - 验证预设的演示账号（admin/macro123, test/123456）
-   - 生成本地Mock token用于演示
-
-3. **数据存储**：
+2. **数据存储**：
+   - 用户会话：localStorage存储token和用户信息
    - 购物车数据：localStorage存储
    - 订单数据：localStorage存储
    - 商品信息：从线上公开API获取（无需认证）
 
+3. **多角色支持**：
+   - 支持管理员、卖家、经办人、买家等多种角色
+   - 每个角色有独立的用户信息
+
 ## 演示账号
 
-| 用户名 | 密码 | 说明 |
-|--------|------|------|
-| admin  | macro123 | 管理员账号 |
-| test   | 123456   | 测试账号 |
+| 角色 | 用户名 | 密码 | 说明 |
+|------|--------|------|------|
+| 管理员 | admin  | macro123 | 系统管理员，全部权限 |
+| 卖家 | seller | 123456 | 商品卖家 |
+| 经办人 | agent | 123456 | B2B托管经办人 |
+| 买家 | buyer | 123456 | 商品买家 |
 
 ## 技术实现
 
@@ -54,15 +56,15 @@ router.beforeEach((to, from, next) => {
 ### 2. 用户Store ([stores/user.js](src/stores/user.js))
 
 **登录流程**：
-1. 尝试调用线上API
-2. 失败时自动使用Mock验证
-3. 验证成功后保存token到localStorage
-4. 设置用户信息
+1. 验证用户名密码是否匹配Mock用户列表
+2. 匹配成功后生成Mock token
+3. 保存token和用户信息到localStorage
+4. 返回登录成功状态
 
 **关键方法**：
-- `login(loginData)`: 登录（支持API + Mock降级）
+- `login(loginData)`: Mock登录验证
 - `logout()`: 退出登录，清除token和用户信息
-- `getUserInfo()`: 获取用户详细信息
+- `getUserInfo()`: 获取用户详细信息（保留用于扩展）
 
 ### 3. 401错误处理 ([utils/request.js](src/utils/request.js))
 
@@ -135,11 +137,12 @@ if (config?._hasAuth && status === 401) {
 
 ## 演示模式说明
 
-当线上API不可用时，系统自动进入演示模式：
-- 使用本地Mock验证
+系统运行在完全本地化的演示模式：
+- 使用本地Mock验证，无需外部API
 - Token格式：`mock_token_<timestamp>`
-- 提示信息：「登录成功（演示模式）」
+- 登录成功提示：「欢迎登录，XXX！」
 - 所有功能正常使用，数据存储在localStorage
+- 支持多角色登录，可测试不同用户视角
 
 ## 注意事项
 
@@ -160,11 +163,15 @@ if (config?._hasAuth && status === 401) {
 
 ### 添加新的Mock账号
 
+在 `src/stores/user.js` 中修改 `mockUsers` 数组：
+
 ```javascript
 const mockUsers = [
-  { username: 'admin', password: 'macro123' },
-  { username: 'test', password: '123456' },
-  { username: 'newuser', password: 'password' } // 添加新账号
+  { username: 'admin', password: 'macro123', role: 'admin', nickName: '管理员' },
+  { username: 'seller', password: '123456', role: 'seller', nickName: '卖家' },
+  { username: 'agent', password: '123456', role: 'agent', nickName: '经办人' },
+  { username: 'buyer', password: '123456', role: 'buyer', nickName: '买家' },
+  { username: 'newuser', password: 'password', role: 'custom', nickName: '新用户' } // 添加新账号
 ]
 ```
 

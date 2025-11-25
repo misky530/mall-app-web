@@ -122,9 +122,13 @@ const goToRegister = () => {
         <!-- 提示信息 -->
         <div class="login-tips">
           <p class="tips-title">💡 演示账号</p>
-          <p>用户名：admin</p>
-          <p>密码：macro123</p>
-          <p class="tips-note">系统使用线上API + 本地存储混合模式</p>
+          <div class="account-list">
+            <p><strong>管理员：</strong>admin / macro123</p>
+            <p><strong>卖家：</strong>seller / 123456</p>
+            <p><strong>经办人：</strong>agent / 123456</p>
+            <p><strong>买家：</strong>buyer / 123456</p>
+          </div>
+          <p class="tips-note">演示模式 · 数据存储于本地</p>
         </div>
       </div>
     </div>
@@ -197,7 +201,25 @@ const goToRegister = () => {
           font-size: 14px;
           font-weight: 600;
           color: $text-primary;
-          margin-bottom: 8px;
+          margin-bottom: 12px;
+        }
+
+        .account-list {
+          text-align: left;
+          margin: 0 auto;
+          max-width: 280px;
+
+          p {
+            font-size: 13px;
+            color: $text-secondary;
+            margin: 6px 0;
+            line-height: 1.6;
+
+            strong {
+              color: $text-primary;
+              font-weight: 500;
+            }
+          }
         }
 
         p {

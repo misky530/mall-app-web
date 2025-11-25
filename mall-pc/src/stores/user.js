@@ -26,65 +26,46 @@ export const useUserStore = defineStore('user', {
   actions: {
     // 管理员登录
     async login(loginData) {
-      try {
-        const res = await adminLogin(loginData)
-        if (res && res.code === 200 && res.data) {
-          const { token, tokenHead } = res.data
-          this.token = token
-          this.tokenHead = tokenHead || 'Bearer '
+      // B2B演示模式：直接使用Mock登录
+      // 线上API需要特殊认证，暂不可用
+      console.log('使用Mock登录模式')
 
-          // 保存到 localStorage
-          localStorage.setItem('token', token)
-          localStorage.setItem('tokenHead', tokenHead || 'Bearer ')
+      const mockUsers = [
+        { username: 'admin', password: 'macro123', role: 'admin', nickName: '管理员' },
+        { username: 'seller', password: '123456', role: 'seller', nickName: '卖家' },
+        { username: 'agent', password: '123456', role: 'agent', nickName: '经办人' },
+        { username: 'buyer', password: '123456', role: 'buyer', nickName: '买家' }
+      ]
 
-          ElMessage.success('登录成功')
+      const user = mockUsers.find(
+        u => u.username === loginData.username && u.password === loginData.password
+      )
 
-          // 获取用户信息
-          await this.getUserInfo()
+      if (user) {
+        // 生成Mock token
+        const mockToken = 'mock_token_' + Date.now()
+        this.token = mockToken
+        this.tokenHead = 'Bearer '
 
-          return true
-        } else {
-          ElMessage.error(res.message || '登录失败')
-          return false
+        // 保存到 localStorage
+        localStorage.setItem('token', mockToken)
+        localStorage.setItem('tokenHead', 'Bearer ')
+
+        // 设置Mock用户信息
+        const mockUserInfo = {
+          username: user.username,
+          icon: '',
+          nickName: user.nickName,
+          role: user.role
         }
-      } catch (error) {
-        console.error('登录API调用失败，使用Mock登录：', error)
+        this.userInfo = mockUserInfo
+        localStorage.setItem('userInfo', JSON.stringify(mockUserInfo))
 
-        // Mock登录 fallback（用于演示环境）
-        const mockUsers = [
-          { username: 'admin', password: 'macro123' },
-          { username: 'test', password: '123456' }
-        ]
-
-        const user = mockUsers.find(
-          u => u.username === loginData.username && u.password === loginData.password
-        )
-
-        if (user) {
-          // 生成Mock token
-          const mockToken = 'mock_token_' + Date.now()
-          this.token = mockToken
-          this.tokenHead = 'Bearer '
-
-          // 保存到 localStorage
-          localStorage.setItem('token', mockToken)
-          localStorage.setItem('tokenHead', 'Bearer ')
-
-          // 设置Mock用户信息
-          const mockUserInfo = {
-            username: loginData.username,
-            icon: '',
-            nickName: loginData.username
-          }
-          this.userInfo = mockUserInfo
-          localStorage.setItem('userInfo', JSON.stringify(mockUserInfo))
-
-          ElMessage.success('登录成功（演示模式）')
-          return true
-        } else {
-          ElMessage.error('用户名或密码错误')
-          return false
-        }
+        ElMessage.success(`欢迎登录，${user.nickName}！`)
+        return true
+      } else {
+        ElMessage.error('用户名或密码错误')
+        return false
       }
     },
 
