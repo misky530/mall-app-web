@@ -64,7 +64,7 @@ const priceRanges = [
   { label: '2000-3000', min: 2000, max: 3000 },
   { label: '3000-5000', min: 3000, max: 5000 },
   { label: '5000以上', min: 5000, max: null }
-])
+]);
 
 // 商品属性筛选（京东风格）
 const productAttrs = ref([
