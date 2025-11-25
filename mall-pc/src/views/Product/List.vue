@@ -98,11 +98,6 @@ const sortOptions = [
 // 价格排序方向
 const priceSort = ref(''); // 'asc' 或 'desc'
 
-// 切换服务标签
-const toggleServiceTag = (tag) => {
-  tag.active = !tag.active
-}
-
 // 更多筛选展开状态
 const showMoreFilters = ref(false);
 
@@ -311,11 +306,6 @@ const handleSortClick = (sortOption) => {
   fetchProductList()
 }
 
-// 切换服务标签
-const toggleServiceTag = (tag) => {
-  tag.active = !tag.active
-}
-
 // 清除所有筛选
 const clearAllFilters = () => {
   filters.value = {
@@ -328,7 +318,6 @@ const clearAllFilters = () => {
     attrs: {}
   }
   priceSort.value = ''
-  serviceTags.value.forEach(tag => tag.active = false)
   sortOptions.forEach(opt => {
     opt.active = opt.value === 'default'
   })
@@ -367,7 +356,6 @@ const activeFiltersCount = computed(() => {
   if (filters.value.brandId) count++
   if (filters.value.minPrice || filters.value.maxPrice) count++
   count += Object.keys(filters.value.attrs).length
-  count += serviceTags.value.filter(tag => tag.active).length
   return count
 })
 </script>
