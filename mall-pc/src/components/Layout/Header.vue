@@ -3,24 +3,68 @@ import { onMounted, watch, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { useCartStore } from '@/stores/cart'
-import { Search, ShoppingCart, User } from '@element-plus/icons-vue'
+import { Search, ShoppingCart, User, Clock, Delete } from '@element-plus/icons-vue'
+import { useSearchHistory } from '@/composables/useSearchHistory'
 
 const router = useRouter()
 const userStore = useUserStore()
 const cartStore = useCartStore()
 
+// 搜索历史功能
+const { history, hotSearches, addHistory, removeHistory, clearHistory } = useSearchHistory()
+
 // 搜索关键词
 const searchKeyword = ref('')
+const showSearchPanel = ref(false)
 
 // 搜索商品
 const handleSearch = () => {
-  if (!searchKeyword.value.trim()) {
+  const keyword = searchKeyword.value.trim()
+  if (!keyword) {
     return
   }
+  
+  // 添加到搜索历史
+  addHistory(keyword)
+  
+  // 隐藏搜索面板
+  showSearchPanel.value = false
+  
+  // 跳转到商品列表页
   router.push({
     name: 'ProductList',
-    query: { keyword: searchKeyword.value }
+    query: { keyword }
   })
+}
+
+// 点击历史/热门搜索
+const handleSearchTag = (keyword) => {
+  searchKeyword.value = keyword
+  handleSearch()
+}
+
+// 删除单条历史
+const handleRemoveHistory = (keyword, event) => {
+  event.stopPropagation()
+  removeHistory(keyword)
+}
+
+// 清除所有历史
+const handleClearHistory = () => {
+  clearHistory()
+}
+
+// 输入框获得焦点
+const handleSearchFocus = () => {
+  showSearchPanel.value = true
+}
+
+// 输入框失去焦点
+const handleSearchBlur = () => {
+  // 延迟隐藏，以便点击事件能够触发
+  setTimeout(() => {
+    showSearchPanel.value = false
+  }, 200)
 }
 
 // 跳转购物车
@@ -107,14 +151,74 @@ watch(
         <div class="search-box">
           <el-input
             v-model="searchKeyword"
-            placeholder="搜索商品"
+            placeholder="支持多关键字搜索，如：华为 手机 5G"
             size="large"
             @keyup.enter="handleSearch"
+            @focus="handleSearchFocus"
+            @blur="handleSearchBlur"
           >
             <template #append>
               <el-button :icon="Search" @click="handleSearch">搜索</el-button>
             </template>
           </el-input>
+
+          <!-- 搜索建议面板 -->
+          <transition name="slide-down">
+            <div v-if="showSearchPanel" class="search-panel">
+              <!-- 搜索历史 -->
+              <div v-if="history.length > 0" class="search-section">
+                <div class="section-header">
+                  <span class="section-title">
+                    <el-icon><Clock /></el-icon>
+                    最近搜索
+                  </span>
+                  <el-button text size="small" @click="handleClearHistory">
+                    清除历史
+                  </el-button>
+                </div>
+                <div class="search-tags">
+                  <span
+                    v-for="item in history"
+                    :key="item"
+                    class="search-tag"
+                    @click="handleSearchTag(item)"
+                  >
+                    {{ item }}
+                    <el-icon class="delete-icon" @click="handleRemoveHistory(item, $event)">
+                      <Delete />
+                    </el-icon>
+                  </span>
+                </div>
+              </div>
+
+              <!-- 热门搜索 -->
+              <div v-if="hotSearches.length > 0" class="search-section">
+                <div class="section-header">
+                  <span class="section-title">
+                    🔥 热门搜索
+                  </span>
+                </div>
+                <div class="search-tags hot-tags">
+                  <span
+                    v-for="(item, index) in hotSearches"
+                    :key="item"
+                    class="search-tag hot-tag"
+                    :class="{ 'top-3': index < 3 }"
+                    @click="handleSearchTag(item)"
+                  >
+                    <span class="tag-index">{{ index + 1 }}</span>
+                    {{ item }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- 搜索提示 -->
+              <div class="search-tips">
+                <div class="tip-item">💡 支持多关键字搜索，空格分隔</div>
+                <div class="tip-item">💡 示例: 华为 手机 5G</div>
+              </div>
+            </div>
+          </transition>
         </div>
 
         <!-- 右侧功能 -->
@@ -210,6 +314,131 @@ watch(
       flex: 1;
       max-width: 600px;
       margin: 0 40px;
+      position: relative;
+
+      :deep(.el-input__wrapper) {
+        border-radius: 4px;
+      }
+
+      // 搜索建议面板
+      .search-panel {
+        position: absolute;
+        top: calc(100% + 8px);
+        left: 0;
+        right: 0;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        padding: 16px;
+        z-index: 1000;
+        max-height: 400px;
+        overflow-y: auto;
+
+        .search-section {
+          margin-bottom: 16px;
+
+          &:last-child {
+            margin-bottom: 0;
+          }
+
+          .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+
+            .section-title {
+              font-size: 14px;
+              font-weight: 600;
+              color: $text-primary;
+              display: flex;
+              align-items: center;
+              gap: 6px;
+            }
+          }
+
+          .search-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+
+            .search-tag {
+              padding: 6px 12px;
+              background: #f5f5f5;
+              border-radius: 4px;
+              font-size: 13px;
+              color: #666;
+              cursor: pointer;
+              transition: all 0.3s;
+              display: flex;
+              align-items: center;
+              gap: 6px;
+
+              &:hover {
+                background: #e8f4ff;
+                color: $primary-color;
+              }
+
+              .delete-icon {
+                font-size: 12px;
+                opacity: 0;
+                transition: opacity 0.3s;
+
+                &:hover {
+                  color: #ff4d4f;
+                }
+              }
+
+              &:hover .delete-icon {
+                opacity: 1;
+              }
+            }
+
+            &.hot-tags {
+              .hot-tag {
+                position: relative;
+                padding-left: 28px;
+
+                .tag-index {
+                  position: absolute;
+                  left: 8px;
+                  top: 50%;
+                  transform: translateY(-50%);
+                  width: 18px;
+                  height: 18px;
+                  line-height: 18px;
+                  text-align: center;
+                  background: #999;
+                  color: white;
+                  border-radius: 50%;
+                  font-size: 11px;
+                  font-weight: 600;
+                }
+
+                &.top-3 .tag-index {
+                  background: linear-gradient(135deg, #ff6b6b, #ee5a6f);
+                }
+
+                &:hover {
+                  background: #fff5f5;
+                  color: #ff4d4f;
+                }
+              }
+            }
+          }
+        }
+
+        .search-tips {
+          padding-top: 12px;
+          border-top: 1px solid #f0f0f0;
+          
+          .tip-item {
+            font-size: 12px;
+            color: #999;
+            line-height: 1.8;
+          }
+        }
+      }
     }
 
     .header-actions {
@@ -261,5 +490,21 @@ watch(
       }
     }
   }
+}
+
+// 动画
+.slide-down-enter-active,
+.slide-down-leave-active {
+  transition: all 0.3s ease;
+}
+
+.slide-down-enter-from {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+.slide-down-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
 }
 </style>

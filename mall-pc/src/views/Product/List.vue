@@ -5,6 +5,7 @@ import { Grid, List as ListIcon } from '@element-plus/icons-vue'
 import ProductCard from '@/components/Product/ProductCard.vue'
 import * as productApi from '@/api/product'
 import * as homeApi from '@/api/home'
+import { ElMessage } from 'element-plus'
 
 const route = useRoute()
 const router = useRouter()
@@ -166,7 +167,7 @@ const getSortValue = (sortType) => {
   return sortMap[sortType] || 0;
 };
 
-// 获取商品列表
+// 获取商品列表 - 使用智能搜索
 const fetchProductList = async () => {
   loading.value = true;
   try {
@@ -182,8 +183,9 @@ const fetchProductList = async () => {
         productList.value = Array.isArray(res.data) ? res.data : []
         pagination.value.total = productList.value.length
       } else {
-        productList.value = generateMockProducts()
-        pagination.value.total = 96
+        const mockData = productApi.generateMockProducts ? productApi.generateMockProducts() : []
+        productList.value = mockData.slice(0, 24)
+        pagination.value.total = mockData.length
       }
     } else if (listType === 'hot') {
       const params = {
@@ -195,38 +197,40 @@ const fetchProductList = async () => {
         productList.value = Array.isArray(res.data) ? res.data : []
         pagination.value.total = productList.value.length
       } else {
-        productList.value = generateMockProducts()
-        pagination.value.total = 96
+        const mockData = productApi.generateMockProducts ? productApi.generateMockProducts() : []
+        productList.value = mockData.slice(0, 24)
+        pagination.value.total = mockData.length
       }
     } else {
+      // 使用智能搜索 (Fuse.js + API 混合模式)
       const params = {
+        keyword: filters.value.keyword || '',
         pageNum: pagination.value.pageNum,
         pageSize: pagination.value.pageSize,
-        keyword: filters.value.keyword || '',
         sort: getSortValue(filters.value.sortType)
       }
 
-      if (filters.value.categoryId) {
-        params.cateId = filters.value.categoryId
-      }
-      if (filters.value.brandId) {
-        params.brandId = filters.value.brandId
-      }
-      if (filters.value.minPrice) {
-        params.minPrice = filters.value.minPrice
-      }
-      if (filters.value.maxPrice) {
-        params.maxPrice = filters.value.maxPrice
+      const filterParams = {
+        categoryId: filters.value.categoryId,
+        brandId: filters.value.brandId,
+        minPrice: filters.value.minPrice,
+        maxPrice: filters.value.maxPrice
       }
 
-      const res = await productApi.searchProductList(params)
-      if (res && res.data) {
-        productList.value = res.data.list || []
-        pagination.value.total = res.data.total || 0
-      } else {
-        productList.value = generateMockProducts()
-        pagination.value.total = 96
+      const result = await productApi.smartSearch(params, filterParams)
+      
+      productList.value = result.list || []
+      pagination.value.total = result.total || 0
+      
+      // 显示搜索来源提示
+      if (result.source === 'local' && filters.value.keyword) {
+        ElMessage({
+          message: `🔍 使用智能搜索找到 ${result.total} 个结果（支持多关键字搜索）`,
+          type: 'success',
+          duration: 2000
+        })
       }
+    }
     }
   } catch (error) {
     console.error('获取商品列表失败：', error)
