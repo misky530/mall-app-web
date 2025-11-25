@@ -84,7 +84,7 @@ const productAttrs = ref([
     name: '屏幕尺寸',
     options: ['6.0英寸以下', '6.0-6.5英寸', '6.5-7.0英寸', '7.0英寸以上']
   }
-])
+]);
 
 // 排序选项（京东风格）
 const sortOptions = [
@@ -93,10 +93,10 @@ const sortOptions = [
   { label: '新品', value: 'new', active: false },
   { label: '评论数', value: 'comment', active: false },
   { label: '价格', value: 'price', active: false, hasArrow: true }
-]
+];
 
 // 价格排序方向
-const priceSort = ref('') // 'asc' 或 'desc'
+const priceSort = ref(''); // 'asc' 或 'desc'
 
 // 服务标签（京东风格）
 const serviceTags = ref([
@@ -105,14 +105,14 @@ const serviceTags = ref([
   { label: '仅显示有货', active: false },
   { label: '京东配送', active: false },
   { label: '全球购', active: false }
-])
+]);
 
 // 当前选中的价格区间
 const selectedPriceRange = computed(() => {
   return priceRanges.find(
     (range) => range.min === filters.value.minPrice && range.max === filters.value.maxPrice
   )
-})
+});
 
 // 页面标题
 const pageTitle = computed(() => {
@@ -127,19 +127,19 @@ const pageTitle = computed(() => {
     return route.query.keyword
   }
   return '商品列表'
-})
+});
 
 // Mock 商品数据（降级方案）
 const generateMockProducts = () => {
-  const mockProducts = []
-  const brands = ['华为', '小米', 'Apple', '三星', 'OPPO', 'vivo']
-  const memories = ['6GB', '8GB', '12GB', '16GB']
-  const storages = ['128GB', '256GB', '512GB', '1TB']
+  const mockProducts = [];
+  const brands = ['华为', '小米', 'Apple', '三星', 'OPPO', 'vivo'];
+  const memories = ['6GB', '8GB', '12GB', '16GB'];
+  const storages = ['128GB', '256GB', '512GB', '1TB'];
 
   for (let i = 1; i <= 24; i++) {
-    const brand = brands[i % brands.length]
-    const memory = memories[i % memories.length]
-    const storage = storages[i % storages.length]
+    const brand = brands[i % brands.length];
+    const memory = memories[i % memories.length];
+    const storage = storages[i % storages.length];
 
     mockProducts.push({
       id: Date.now() + i,
@@ -154,10 +154,10 @@ const generateMockProducts = () => {
       newStatus: Math.random() > 0.7 ? 1 : 0,
       recommendStatus: Math.random() > 0.5 ? 1 : 0,
       brandName: brand
-    })
+    });
   }
-  return mockProducts
-}
+  return mockProducts;
+};
 
 // 排序类型映射
 const getSortValue = (sortType) => {
@@ -168,15 +168,15 @@ const getSortValue = (sortType) => {
     'price_desc': 3,
     'new': 4,
     'comment': 5
-  }
-  return sortMap[sortType] || 0
-}
+  };
+  return sortMap[sortType] || 0;
+};
 
 // 获取商品列表
 const fetchProductList = async () => {
-  loading.value = true
+  loading.value = true;
   try {
-    const listType = route.query.type
+    const listType = route.query.type;
 
     if (listType === 'new') {
       const params = {
