@@ -35,20 +35,25 @@ const efficiency = ref({
 })
 
 // 加载数据
-const loadData = () => {
-  generateMockOrdersIfNeeded()
+const loadData = async () => {
+  try {
+    // 不再需要生成Mock数据
+    // generateMockOrdersIfNeeded()
 
-  const capitalData = getCapitalByStatus()
-  const todayStats = getTodayStats()
-  const overtime = getOvertimeOrders()
-  const orders = getAllB2BOrders()
+    const [capitalData, todayStats, overtime, orders, avgDays] = await Promise.all([
+      getCapitalByStatus(),
+      getTodayStats(),
+      getOvertimeOrders(),
+      getAllB2BOrders(),
+      getAverageCycleDays()
+    ])
 
   // KPI指标
   kpiData.value = {
     totalCapital: capitalData.total,
     todayInflow: todayStats.todayVerified.amount,
     todayOutflow: todayStats.todaySettled.amount,
-    avgCycle: getAverageCycleDays(),
+    avgCycle: avgDays,
     pendingCount: capitalData.pendingVerify.count + capitalData.pendingSettlement.count,
     riskCount: overtime.over48HoursPendingVerify.length + overtime.over15DaysPendingSettlement.length
   }
@@ -75,6 +80,9 @@ const loadData = () => {
     : 0
   efficiency.value.disputeRate = 95 // 简化
   efficiency.value.settlementRate = 88 // 简化
+  } catch (error) {
+    console.error('加载报表数据失败:', error)
+  }
 }
 
 // 格式化金额

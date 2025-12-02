@@ -38,30 +38,40 @@ const statistics = ref({
 })
 
 // 加载数据
-const loadData = () => {
-  let orders = getAllB2BOrders()
-  
-  // 应用筛选
-  if (queryParams.value.status) {
-    orders = orders.filter(o => o.status === parseInt(queryParams.value.status))
-  }
-  
-  if (queryParams.value.keyword) {
-    const keyword = queryParams.value.keyword.toLowerCase()
-    orders = orders.filter(o => 
-      o.orderSn?.toLowerCase().includes(keyword) ||
-      o.sellerName?.toLowerCase().includes(keyword) ||
-      o.buyerName?.toLowerCase().includes(keyword)
-    )
-  }
-  
-  reportData.value = orders
-  
-  // 计算统计
-  statistics.value = {
-    totalCount: orders.length,
-    totalAmount: orders.reduce((sum, o) => sum + (o.totalAmount || 0), 0),
-    avgAmount: orders.length > 0 ? orders.reduce((sum, o) => sum + (o.totalAmount || 0), 0) / orders.length : 0
+const loadData = async () => {
+  try {
+    let orders = await getAllB2BOrders()
+
+    // 应用筛选
+    if (queryParams.value.status) {
+      orders = orders.filter(o => o.status === parseInt(queryParams.value.status))
+    }
+
+    if (queryParams.value.keyword) {
+      const keyword = queryParams.value.keyword.toLowerCase()
+      orders = orders.filter(o =>
+        o.orderSn?.toLowerCase().includes(keyword) ||
+        o.sellerName?.toLowerCase().includes(keyword) ||
+        o.buyerName?.toLowerCase().includes(keyword)
+      )
+    }
+
+    reportData.value = orders
+
+    // 计算统计
+    statistics.value = {
+      totalCount: orders.length,
+      totalAmount: orders.reduce((sum, o) => sum + (o.payAmount || o.totalAmount || 0), 0),
+      avgAmount: orders.length > 0 ? orders.reduce((sum, o) => sum + (o.payAmount || o.totalAmount || 0), 0) / orders.length : 0
+    }
+  } catch (error) {
+    console.error('加载报表数据失败:', error)
+    reportData.value = []
+    statistics.value = {
+      totalCount: 0,
+      totalAmount: 0,
+      avgAmount: 0
+    }
   }
 }
 

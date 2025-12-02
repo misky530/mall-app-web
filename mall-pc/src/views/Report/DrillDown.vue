@@ -61,8 +61,9 @@ const chartData = ref([])
 const detailData = ref([])
 
 // 加载数据
-const loadData = () => {
-  let orders = getAllB2BOrders()
+const loadData = async () => {
+  try {
+    let orders = await getAllB2BOrders()
   
   // 应用筛选
   if (filters.value.dateRange?.length === 2) {
@@ -111,6 +112,11 @@ const loadData = () => {
     ...o,
     statusText: getStatusText(o.status)
   }))
+  } catch (error) {
+    console.error('加载钻取数据失败:', error)
+    detailData.value = []
+    chartData.value = []
+  }
 }
 
 // 按维度聚合

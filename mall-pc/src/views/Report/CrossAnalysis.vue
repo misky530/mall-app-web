@@ -28,41 +28,47 @@ const rowLabels = ref([])
 const colLabels = ref([])
 
 // 加载数据
-const loadData = () => {
-  const orders = getAllB2BOrders()
-  
-  // 获取行列维度的所有值
-  rowLabels.value = getLabelsForDimension(orders, primaryDimension.value)
-  colLabels.value = getLabelsForDimension(orders, secondaryDimension.value)
-  
-  // 构建交叉表数据
-  const matrix = []
-  
-  rowLabels.value.forEach((rowLabel, rowIdx) => {
-    const row = { label: rowLabel, cells: [] }
-    
-    colLabels.value.forEach((colLabel, colIdx) => {
-      // 筛选符合条件的订单
-      const filteredOrders = orders.filter(o => 
-        matchDimension(o, primaryDimension.value, rowLabel) &&
-        matchDimension(o, secondaryDimension.value, colLabel)
-      )
-      
-      const count = filteredOrders.length
-      const amount = filteredOrders.reduce((sum, o) => sum + (o.totalAmount || 0), 0)
-      
-      row.cells.push({ count, amount })
-      
-      // 热力图数据 [x, y, value]
-      heatmapData.value.push([colIdx, rowIdx, amount])
+const loadData = async () => {
+  try {
+    const orders = await getAllB2BOrders()
+
+    // 获取行列维度的所有值
+    rowLabels.value = getLabelsForDimension(orders, primaryDimension.value)
+    colLabels.value = getLabelsForDimension(orders, secondaryDimension.value)
+
+    // 构建交叉表数据
+    const matrix = []
+
+    rowLabels.value.forEach((rowLabel, rowIdx) => {
+      const row = { label: rowLabel, cells: [] }
+
+      colLabels.value.forEach((colLabel, colIdx) => {
+        // 筛选符合条件的订单
+        const filteredOrders = orders.filter(o =>
+          matchDimension(o, primaryDimension.value, rowLabel) &&
+          matchDimension(o, secondaryDimension.value, colLabel)
+        )
+
+        const count = filteredOrders.length
+        const amount = filteredOrders.reduce((sum, o) => sum + (o.payAmount || o.totalAmount || 0), 0)
+
+        row.cells.push({ count, amount })
+
+        // 热力图数据 [x, y, value]
+        heatmapData.value.push([colIdx, rowIdx, amount])
+      })
+
+      matrix.push(row)
     })
-    
-    matrix.push(row)
-  })
-  
-  crossData.value = matrix
-  
-  renderHeatmap()
+
+    crossData.value = matrix
+
+    renderHeatmap()
+  } catch (error) {
+    console.error('加载交叉分析数据失败:', error)
+    crossData.value = []
+    heatmapData.value = []
+  }
 }
 
 // 获取维度的所有标签

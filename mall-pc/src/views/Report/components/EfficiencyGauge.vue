@@ -21,9 +21,10 @@ const efficiencyData = ref({
 })
 
 // 计算效率指标
-const calculateEfficiency = () => {
-  const orders = getAllB2BOrders()
-  const now = new Date()
+const calculateEfficiency = async () => {
+  try {
+    const orders = await getAllB2BOrders()
+    const now = new Date()
 
   // 1. 收款确认及时率（应在24小时内确认）
   const verifyOrders = orders.filter(order => order.verifyTime)
@@ -86,6 +87,14 @@ const calculateEfficiency = () => {
     rate: settlementOrders.length > 0 ? Math.round((settlementOnTime / settlementOrders.length) * 100) : 0,
     onTime: settlementOnTime,
     total: settlementOrders.length
+  }
+  } catch (error) {
+    console.error('计算效率指标失败:', error)
+    efficiencyData.value = {
+      verify: { rate: 0, onTime: 0, total: 0 },
+      dispute: { rate: 0, onTime: 0, total: 0 },
+      settlement: { rate: 0, onTime: 0, total: 0 }
+    }
   }
 }
 
@@ -192,8 +201,8 @@ const initCharts = () => {
 }
 
 // 加载数据
-const loadData = () => {
-  calculateEfficiency()
+const loadData = async () => {
+  await calculateEfficiency()
   initCharts()
 }
 

@@ -88,24 +88,29 @@ const getRiskFactors = (order) => {
 }
 
 // 加载数据
-const loadData = () => {
-  const orders = getAllB2BOrders()
+const loadData = async () => {
+  try {
+    const orders = await getAllB2BOrders()
 
-  // 只取未完成的订单
-  const activeOrders = orders.filter(order => order.status !== 4)
+    // 只取未完成的订单
+    const activeOrders = orders.filter(order => order.status !== 4)
 
-  // 计算风险评分
-  const ordersWithRisk = activeOrders.map(order => ({
-    ...order,
-    riskScore: calculateRiskScore(order),
-    riskLevel: getRiskLevel(calculateRiskScore(order)),
-    riskFactors: getRiskFactors(order)
-  }))
+    // 计算风险评分
+    const ordersWithRisk = activeOrders.map(order => ({
+      ...order,
+      riskScore: calculateRiskScore(order),
+      riskLevel: getRiskLevel(calculateRiskScore(order)),
+      riskFactors: getRiskFactors(order)
+    }))
 
-  // 按风险评分排序，取前10
-  riskOrders.value = ordersWithRisk
-    .sort((a, b) => b.riskScore - a.riskScore)
-    .slice(0, 10)
+    // 按风险评分排序，取前10
+    riskOrders.value = ordersWithRisk
+      .sort((a, b) => b.riskScore - a.riskScore)
+      .slice(0, 10)
+  } catch (error) {
+    console.error('加载风险订单失败:', error)
+    riskOrders.value = []
+  }
 }
 
 // 格式化金额
