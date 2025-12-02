@@ -7,15 +7,40 @@ import { getCapitalByStatus, getTodayStats, getAverageCycleDays, generateMockOrd
 const capitalData = ref(null)
 const todayStats = ref(null)
 const avgCycleDays = ref(0)
+const loading = ref(true)
 
 // 加载数据
-const loadData = () => {
-  // 确保有足够的演示数据
-  generateMockOrdersIfNeeded()
+const loadData = async () => {
+  try {
+    loading.value = true
+    console.log('开始加载资金池数据...')
 
-  capitalData.value = getCapitalByStatus()
-  todayStats.value = getTodayStats()
-  avgCycleDays.value = getAverageCycleDays()
+    // 不再需要生成Mock数据,直接从API获取
+    // generateMockOrdersIfNeeded()
+
+    // 并行加载所有数据
+    const [capital, today, avgDays] = await Promise.all([
+      getCapitalByStatus(),
+      getTodayStats(),
+      getAverageCycleDays()
+    ])
+
+    capitalData.value = capital
+    todayStats.value = today
+    avgCycleDays.value = avgDays
+
+    console.log('资金池数据加载完成:', {
+      总资金: capital.total,
+      总笔数: capital.totalCount,
+      今日确认: today.todayVerified.count,
+      今日结算: today.todaySettled.count,
+      平均周期: avgDays
+    })
+  } catch (error) {
+    console.error('加载资金池数据失败:', error)
+  } finally {
+    loading.value = false
+  }
 }
 
 // 格式化金额
@@ -181,9 +206,13 @@ onMounted(() => {
       </div>
     </div>
 
-    <div v-else class="loading-state">
+    <div v-else-if="loading" class="loading-state">
       <el-icon class="is-loading" :size="40"><Loading /></el-icon>
-      <p>正在加载数据...</p>
+      <p>正在从API加载真实订单数据...</p>
+    </div>
+
+    <div v-else class="loading-state">
+      <p>暂无数据</p>
     </div>
   </div>
 </template>

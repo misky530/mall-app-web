@@ -1,65 +1,107 @@
 /**
  * 报表数据服务
- * 从localStorage读取订单数据并进行统计分析
+ * 从API获取订单数据并进行统计分析
  */
+
+import { fetchOrderList } from '@/api/order';
+
+// 缓存订单数据以减少API调用
+let cachedOrders = null;
+let cacheTime = null;
+const CACHE_DURATION = 5 * 60 * 1000; // 5分钟缓存
 
 /**
  * 获取所有B2B订单
+ * @returns {Promise<Array>} 订单列表
  */
-export function getAllB2BOrders() {
-  const orders = []
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i)
-    if (key && key.startsWith('order_')) {
-      const orderData = localStorage.getItem(key)
-      if (orderData) {
-        try {
-          const order = JSON.parse(orderData)
-          // 只统计B2B订单 (payType === 3)
-          if (order.payType === 3) {
-            orders.push(order)
-          }
-        } catch (e) {
-          console.error('解析订单数据失败:', e)
-        }
-      }
-    }
+export async function getAllB2BOrders() {
+  // 检查缓存
+  const now = Date.now();
+  if (cachedOrders && cacheTime && (now - cacheTime < CACHE_DURATION)) {
+    console.log('使用缓存的订单数据');
+    return cachedOrders;
   }
-  return orders
+
+  try {
+    console.log('从API获取订单数据...');
+    const response = await fetchOrderList({
+      pageNum: 1,
+      pageSize: 1000 // 获取足够多的订单用于统计
+    });
+
+    if (response && response.data) {
+      // 过滤出B2B托管订单 (payType === 3)
+      const orders = response.data.list || [];
+      const b2bOrders = orders.filter(order => order.payType === 3);
+
+      console.log(`成功获取 ${b2bOrders.length} 个B2B托管订单`);
+
+      // 更新缓存
+      cachedOrders = b2bOrders;
+      cacheTime = now;
+
+      return b2bOrders;
+    }
+
+    console.warn('API返回数据为空');
+    return [];
+  } catch (error) {
+    console.error('获取订单数据失败:', error);
+    // 如果API失败,返回空数组或缓存数据
+    return cachedOrders || [];
+  }
+}
+
+/**
+ * 清除缓存
+ */
+export function clearOrderCache() {
+  cachedOrders = null;
+  cacheTime = null;
+  console.log('订单缓存已清除');
 }
 
 /**
  * 按状态统计资金
+ * @returns {Promise<Object>} 资金统计数据
  */
-export function getCapitalByStatus() {
-  const orders = getAllB2BOrders()
+export async function getCapitalByStatus() {
+  const orders = await getAllB2BOrders();
 
   const result = {
-    // status: 0 - 待确认收款
+    // status: 0 - 待付款
+    // status: 1 - 待发货
+    // status: 2 - 已发货
+    // status: 3 - 已完成
+    // status: 4 - 已关闭
+    // status: 5 - 无效订单
+
+    // B2B托管流程状态映射:
+    // 0 - 待确认收款 (对应订单status=0或刚提交凭证)
     pendingVerify: {
       amount: 0,
       count: 0,
       orders: []
     },
-    // status: 1 - 已确认待发货
+    // 1 - 已确认待发货 (对应订单status=1)
     pendingShip: {
       amount: 0,
       count: 0,
       orders: []
     },
-    // status: 2 - 已发货待验收
+    // 2 - 已发货待验收 (对应订单status=2)
     pendingAcceptance: {
       amount: 0,
       count: 0,
       orders: []
     },
-    // status: 3 - 验收通过待结算
+    // 3 - 验收通过待结算 (对应特殊标记或status=2超过一定时间)
     pendingSettlement: {
       amount: 0,
       count: 0,
       orders: []
     },
-    // status: 4 - 已完成
+    // 4 - 已完成 (对应订单status=3)
     completed: {
       amount: 0,
       count: 0,
@@ -68,57 +110,63 @@ export function getCapitalByStatus() {
     // 总监管资金 (status 0-3)
     total: 0,
     totalCount: 0
-  }
+  };
 
   orders.forEach(order => {
-    const amount = order.payAmount || 0
+    const amount = order.payAmount || order.totalAmount || 0;
 
+    // 根据订单状态分类
     switch (order.status) {
-      case 0:
-        result.pendingVerify.amount += amount
-        result.pendingVerify.count++
-        result.pendingVerify.orders.push(order)
-        result.total += amount
-        result.totalCount++
-        break
-      case 1:
-        result.pendingShip.amount += amount
-        result.pendingShip.count++
-        result.pendingShip.orders.push(order)
-        result.total += amount
-        result.totalCount++
-        break
-      case 2:
-        result.pendingAcceptance.amount += amount
-        result.pendingAcceptance.count++
-        result.pendingAcceptance.orders.push(order)
-        result.total += amount
-        result.totalCount++
-        break
-      case 3:
-        result.pendingSettlement.amount += amount
-        result.pendingSettlement.count++
-        result.pendingSettlement.orders.push(order)
-        result.total += amount
-        result.totalCount++
-        break
-      case 4:
-        result.completed.amount += amount
-        result.completed.count++
-        result.completed.orders.push(order)
-        break
-    }
-  })
+      case 0: // 待付款 - 视为待确认收款
+        result.pendingVerify.amount += amount;
+        result.pendingVerify.count++;
+        result.pendingVerify.orders.push(order);
+        result.total += amount;
+        result.totalCount++;
+        break;
+      case 1: // 待发货 - 已确认待发货
+        result.pendingShip.amount += amount;
+        result.pendingShip.count++;
+        result.pendingShip.orders.push(order);
+        result.total += amount;
+        result.totalCount++;
+        break;
+      case 2: // 已发货 - 待验收
+        // 如果已发货超过7天,视为待结算
+        const shipTime = order.deliveryTime ? new Date(order.deliveryTime) : new Date(order.modifyTime);
+        const daysSinceShip = (new Date() - shipTime) / (1000 * 60 * 60 * 24);
 
-  return result
+        if (daysSinceShip > 7) {
+          result.pendingSettlement.amount += amount;
+          result.pendingSettlement.count++;
+          result.pendingSettlement.orders.push(order);
+        } else {
+          result.pendingAcceptance.amount += amount;
+          result.pendingAcceptance.count++;
+          result.pendingAcceptance.orders.push(order);
+        }
+        result.total += amount;
+        result.totalCount++;
+        break;
+      case 3: // 已完成
+        result.completed.amount += amount;
+        result.completed.count++;
+        result.completed.orders.push(order);
+        break;
+      // status 4(已关闭) 和 5(无效订单) 不统计
+    }
+  });
+
+  return result;
 }
 
 /**
  * 获取超时订单
+ * @returns {Promise<Object>} 超时订单列表
  */
-export function getOvertimeOrders() {
-  const orders = getAllB2BOrders()
-  const now = new Date()
+export async function getOvertimeOrders() {
+  const orders = await getAllB2BOrders();
+  const now = new Date();
 
   const result = {
     // 超48小时未确认收款
@@ -129,106 +177,112 @@ export function getOvertimeOrders() {
     over15DaysPendingSettlement: [],
     // 超7天未验收
     over7DaysPendingAcceptance: []
-  }
+  };
 
   orders.forEach(order => {
-    const createTime = new Date(order.createTime || order.submitVoucherTime)
-    const hoursDiff = (now - createTime) / (1000 * 60 * 60)
-    const daysDiff = hoursDiff / 24
+    const createTime = new Date(order.createTime);
+    const hoursDiff = (now - createTime) / (1000 * 60 * 60);
 
-    // 待确认收款超时
+    // 待确认收款超时 (status=0)
     if (order.status === 0) {
       if (hoursDiff > 48) {
         result.over48HoursPendingVerify.push({
           ...order,
           overtimeHours: Math.floor(hoursDiff)
-        })
+        });
       } else if (hoursDiff > 24) {
         result.over24HoursPendingVerify.push({
           ...order,
           overtimeHours: Math.floor(hoursDiff)
-        })
+        });
       }
     }
 
-    // 待结算超时
-    if (order.status === 3) {
-      if (daysDiff > 15) {
-        result.over15DaysPendingSettlement.push({
-          ...order,
-          overtimeDays: Math.floor(daysDiff)
-        })
-      }
-    }
+    // 已发货超7天未验收 (status=2)
+    if (order.status === 2) {
+      const shipTime = order.deliveryTime ? new Date(order.deliveryTime) : new Date(order.modifyTime);
+      const daysSinceShip = (now - shipTime) / (1000 * 60 * 60 * 24);
 
-    // 已发货超7天未验收
-    if (order.status === 2 && order.shipTime) {
-      const shipTime = new Date(order.shipTime)
-      const daysSinceShip = (now - shipTime) / (1000 * 60 * 60 * 24)
       if (daysSinceShip > 7) {
-        result.over7DaysPendingAcceptance.push({
-          ...order,
-          daysSinceShip: Math.floor(daysSinceShip)
-        })
+        // 超15天视为待结算超时
+        if (daysSinceShip > 15) {
+          result.over15DaysPendingSettlement.push({
+            ...order,
+            overtimeDays: Math.floor(daysSinceShip)
+          });
+        } else {
+          result.over7DaysPendingAcceptance.push({
+            ...order,
+            daysSinceShip: Math.floor(daysSinceShip)
+          });
+        }
       }
     }
-  })
+  });
 
-  return result
+  return result;
 }
 
 /**
  * 获取今日数据统计
+ * @returns {Promise<Object>} 今日统计数据
  */
-export function getTodayStats() {
-  const orders = getAllB2BOrders()
-  const today = new Date().toLocaleDateString('zh-CN')
+export async function getTodayStats() {
+  const orders = await getAllB2BOrders();
+  const today = new Date().toLocaleDateString('zh-CN');
 
   const result = {
     todayVerified: { amount: 0, count: 0 }, // 今日确认收款
     todaySettled: { amount: 0, count: 0 },  // 今日结算
     todayCreated: { amount: 0, count: 0 }   // 今日创建订单
-  }
+  };
 
   orders.forEach(order => {
-    // 今日确认收款
-    if (order.verifyTime && new Date(order.verifyTime).toLocaleDateString('zh-CN') === today) {
-      result.todayVerified.amount += order.payAmount || 0
-      result.todayVerified.count++
-    }
+    const amount = order.payAmount || order.totalAmount || 0;
 
-    // 今日结算
-    if (order.settlementTime && new Date(order.settlementTime).toLocaleDateString('zh-CN') === today) {
-      result.todaySettled.amount += order.payAmount || 0
-      result.todaySettled.count++
-    }
-
-    // 今日创建
+    // 今日创建订单
     if (order.createTime && new Date(order.createTime).toLocaleDateString('zh-CN') === today) {
-      result.todayCreated.amount += order.payAmount || 0
-      result.todayCreated.count++
+      result.todayCreated.amount += amount;
+      result.todayCreated.count++;
     }
-  })
+
+    // 今日确认收款 (从status 0->1的订单)
+    if (order.status >= 1 && order.paymentTime) {
+      if (new Date(order.paymentTime).toLocaleDateString('zh-CN') === today) {
+        result.todayVerified.amount += amount;
+        result.todayVerified.count++;
+      }
+    }
+
+    // 今日结算 (status=3完成的订单)
+    if (order.status === 3 && order.endTime) {
+      if (new Date(order.endTime).toLocaleDateString('zh-CN') === today) {
+        result.todaySettled.amount += amount;
+        result.todaySettled.count++;
+      }
+    }
+  });
 
   // 计算净流入
-  result.netInflow = result.todayVerified.amount - result.todaySettled.amount
+  result.netInflow = result.todayVerified.amount - result.todaySettled.amount;
 
-  return result
+  return result;
 }
 
 /**
  * 获取近7天资金流动趋势
+ * @returns {Promise<Array>} 7天趋势数据
  */
-export function getLast7DaysTrend() {
-  const orders = getAllB2BOrders()
-  const trends = []
+export async function getLast7DaysTrend() {
+  const orders = await getAllB2BOrders();
+  const trends = [];
 
   // 生成近7天日期
   for (let i = 6; i >= 0; i--) {
-    const date = new Date()
-    date.setDate(date.getDate() - i)
-    const dateStr = date.toLocaleDateString('zh-CN')
-    const dayName = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'][date.getDay()]
+    const date = new Date();
+    date.setDate(date.getDate() - i);
+    const dateStr = date.toLocaleDateString('zh-CN');
+    const dayName = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'][date.getDay()];
 
     const dayData = {
       date: dateStr,
@@ -236,126 +290,80 @@ export function getLast7DaysTrend() {
       inflow: 0,    // 流入(确认收款)
       outflow: 0,   // 流出(结算)
       netflow: 0    // 净流量
-    }
+    };
 
     orders.forEach(order => {
-      const amount = order.payAmount || 0
+      const amount = order.payAmount || order.totalAmount || 0;
 
-      // 统计当天确认收款
-      if (order.verifyTime && new Date(order.verifyTime).toLocaleDateString('zh-CN') === dateStr) {
-        dayData.inflow += amount
+      // 统计当天确认收款 (从status 0->1)
+      if (order.status >= 1 && order.paymentTime) {
+        if (new Date(order.paymentTime).toLocaleDateString('zh-CN') === dateStr) {
+          dayData.inflow += amount;
+        }
       }
 
-      // 统计当天结算
-      if (order.settlementTime && new Date(order.settlementTime).toLocaleDateString('zh-CN') === dateStr) {
-        dayData.outflow += amount
+      // 统计当天结算 (status=3完成)
+      if (order.status === 3 && order.endTime) {
+        if (new Date(order.endTime).toLocaleDateString('zh-CN') === dateStr) {
+          dayData.outflow += amount;
+        }
       }
-    })
+    });
 
-    dayData.netflow = dayData.inflow - dayData.outflow
-    trends.push(dayData)
+    dayData.netflow = dayData.inflow - dayData.outflow;
+    trends.push(dayData);
   }
 
-  return trends
+  return trends;
 }
 
 /**
  * 获取争议/售后订单
+ * @returns {Promise<Array>} 争议订单列表
  */
-export function getDisputeOrders() {
-  const orders = getAllB2BOrders()
+export async function getDisputeOrders() {
+  const orders = await getAllB2BOrders();
 
+  // 过滤出有问题的订单
   return orders.filter(order => {
-    // status: -1 付款驳回, -2 验收失败, -3 仲裁完成
-    return order.status === -1 || order.status === -2 || order.status === -3
-  })
+    // status: 4 已关闭(可能是取消), 5 无效订单
+    // 或者有特殊的争议标记
+    return order.status === 4 || order.status === 5 || order.deleteStatus === 1;
+  });
 }
 
 /**
  * 计算平均资金占用周期
+ * @returns {Promise<number>} 平均天数
  */
-export function getAverageCycleDays() {
-  const completedOrders = getAllB2BOrders().filter(order => order.status === 4)
+export async function getAverageCycleDays() {
+  const orders = await getAllB2BOrders();
+  const completedOrders = orders.filter(order => order.status === 3);
 
-  if (completedOrders.length === 0) return 0
+  if (completedOrders.length === 0) return 0;
 
-  let totalDays = 0
-  let validCount = 0
+  let totalDays = 0;
+  let validCount = 0;
 
   completedOrders.forEach(order => {
-    if (order.createTime && order.settlementTime) {
-      const createTime = new Date(order.createTime)
-      const settlementTime = new Date(order.settlementTime)
-      const days = (settlementTime - createTime) / (1000 * 60 * 60 * 24)
-      totalDays += days
-      validCount++
+    if (order.createTime && order.endTime) {
+      const createTime = new Date(order.createTime);
+      const endTime = new Date(order.endTime);
+      const days = (endTime - createTime) / (1000 * 60 * 60 * 24);
+      totalDays += days;
+      validCount++;
     }
-  })
+  });
 
-  return validCount > 0 ? (totalDays / validCount).toFixed(1) : 0
+  return validCount > 0 ? (totalDays / validCount).toFixed(1) : 0;
 }
 
 /**
- * 生成Mock数据（如果localStorage没有足够数据）
+ * 生成Mock数据（如果API没有足够数据）
+ * 注意: 现在这个函数主要用于开发测试
  */
 export function generateMockOrdersIfNeeded() {
-  const orders = getAllB2BOrders()
-
-  // 如果订单少于10个，生成一些Mock数据用于演示
-  if (orders.length < 10) {
-    const mockOrders = []
-    const now = new Date()
-
-    // 生成各种状态的订单
-    const statuses = [0, 0, 0, 1, 1, 2, 2, 2, 3, 3]
-
-    statuses.forEach((status, index) => {
-      const orderId = `mock_${Date.now()}_${index}`
-      const amount = Math.floor(Math.random() * 50000) + 10000
-
-      const createTime = new Date(now.getTime() - Math.random() * 7 * 24 * 60 * 60 * 1000)
-
-      const order = {
-        id: orderId,
-        orderSn: `ESC${Date.now()}${index}`,
-        status,
-        statusName: ['待确认收款', '待发货', '已发货', '待结算', '已完成'][status] || '待确认收款',
-        payAmount: amount,
-        payType: 3,
-        payTypeName: 'B2B托管',
-        createTime: createTime.toLocaleString('zh-CN'),
-        submitVoucherTime: createTime.toLocaleString('zh-CN'),
-        receiverName: `买家${index + 1}`,
-        receiverPhone: '138****5678',
-        items: [
-          {
-            productId: 26,
-            productName: 'Demo商品',
-            productPic: 'http://macro-oss.oss-cn-shenzhen.aliyuncs.com/mall/images/20180607/5ac1bf59Ndefaac16.jpg',
-            price: amount / Math.ceil(Math.random() * 3 + 1),
-            quantity: Math.ceil(Math.random() * 3 + 1)
-          }
-        ]
-      }
-
-      // 根据状态添加额外字段
-      if (status >= 1) {
-        order.verifyTime = new Date(createTime.getTime() + 2 * 60 * 60 * 1000).toLocaleString('zh-CN')
-      }
-      if (status >= 2) {
-        order.shipTime = new Date(createTime.getTime() + 10 * 60 * 60 * 1000).toLocaleString('zh-CN')
-      }
-      if (status >= 4) {
-        order.settlementTime = new Date(createTime.getTime() + 7 * 24 * 60 * 60 * 1000).toLocaleString('zh-CN')
-      }
-
-      localStorage.setItem(`order_${orderId}`, JSON.stringify(order))
-      mockOrders.push(order)
-    })
-
-    console.log(`已生成 ${mockOrders.length} 个Mock订单用于报表演示`)
-    return mockOrders
-  }
-
-  return orders
+  console.log('现在使用真实API数据,不再需要生成Mock数据');
+  // 保留这个函数以兼容现有代码,但不再生成mock数据
+  return [];
 }

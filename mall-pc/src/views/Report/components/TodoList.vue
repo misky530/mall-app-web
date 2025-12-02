@@ -15,12 +15,25 @@ const todos = ref({
 
 // 预估工作量
 const estimatedHours = ref(0)
+const loading = ref(true)
 
 // 加载待办数据
-const loadTodos = () => {
-  const capitalData = getCapitalByStatus()
-  const disputes = getDisputeOrders()
-  const overtime = getOvertimeOrders()
+const loadTodos = async () => {
+  try {
+    loading.value = true
+    console.log('开始加载待办事项...')
+
+    const [capitalData, disputes, overtime] = await Promise.all([
+      getCapitalByStatus(),
+      getDisputeOrders(),
+      getOvertimeOrders()
+    ])
+
+    console.log('待办数据加载完成:', {
+      待确认: capitalData.pendingVerify.count,
+      争议: disputes.length,
+      待结算: capitalData.pendingSettlement.count
+    })
 
   // 收款确认
   todos.value.pendingVerify = {
@@ -60,6 +73,11 @@ const loadTodos = () => {
   const settlementHours = todos.value.pendingSettlement.count * 0.067
 
   estimatedHours.value = (verifyHours + disputeHours + settlementHours).toFixed(1)
+  } catch (error) {
+    console.error('加载待办数据失败:', error)
+  } finally {
+    loading.value = false
+  }
 }
 
 // 总待办数

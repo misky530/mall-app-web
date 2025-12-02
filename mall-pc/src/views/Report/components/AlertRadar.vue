@@ -12,11 +12,20 @@ const alerts = ref({
   warning: [],   // 警告
   info: []       // 提醒
 })
+const loading = ref(true)
 
 // 加载预警数据
-const loadAlerts = () => {
-  const overtime = getOvertimeOrders()
-  const disputes = getDisputeOrders()
+const loadAlerts = async () => {
+  try {
+    loading.value = true
+    console.log('开始加载预警数据...')
+
+    const [overtime, disputes] = await Promise.all([
+      getOvertimeOrders(),
+      getDisputeOrders()
+    ])
+
+    console.log('预警数据加载完成:', { 超时订单: overtime, 争议订单: disputes.length })
 
   alerts.value = {
     critical: [],
@@ -126,6 +135,11 @@ const loadAlerts = () => {
       title: '暂无异常',
       description: '系统运行正常，继续保持！'
     })
+  }
+  } catch (error) {
+    console.error('加载预警数据失败:', error)
+  } finally {
+    loading.value = false
   }
 }
 

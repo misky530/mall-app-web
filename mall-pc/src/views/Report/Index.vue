@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { Refresh, Loading } from '@element-plus/icons-vue'
+import { clearOrderCache } from '@/utils/reportData'
 import CapitalOverview from './components/CapitalOverview.vue'
 import AlertRadar from './components/AlertRadar.vue'
 import TodoList from './components/TodoList.vue'
@@ -19,6 +20,11 @@ const currentDate = ref(new Date().toLocaleDateString('zh-CN', {
 const refreshing = ref(false)
 const handleRefresh = async () => {
   refreshing.value = true
+  console.log('刷新报表数据...')
+
+  // 清除订单缓存,强制重新从API获取
+  clearOrderCache()
+
   // 触发子组件刷新
   window.location.reload()
 }

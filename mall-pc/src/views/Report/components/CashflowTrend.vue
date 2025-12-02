@@ -9,11 +9,23 @@ let chartInstance = null
 
 // 趋势数据
 const trendData = ref([])
+const loading = ref(true)
 
 // 加载数据
-const loadData = () => {
-  trendData.value = getLast7DaysTrend()
-  initChart()
+const loadData = async () => {
+  try {
+    loading.value = true
+    console.log('开始加载近7天资金流动趋势...')
+
+    trendData.value = await getLast7DaysTrend()
+
+    console.log('趋势数据加载完成:', trendData.value.length, '天')
+    initChart()
+  } catch (error) {
+    console.error('加载趋势数据失败:', error)
+  } finally {
+    loading.value = false
+  }
 }
 
 // 计算汇总数据
