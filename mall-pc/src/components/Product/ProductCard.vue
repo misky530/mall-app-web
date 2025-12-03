@@ -161,36 +161,37 @@ const handleAddToCart = () => {
   }
 
   .product-info {
-    padding: 16px;
+    padding: 10px 12px;
 
     .product-name {
-      font-size: $font-size-base;
-      font-weight: 500;
+      font-size: 13px;
+      font-weight: 400;
       color: $text-primary;
-      margin-bottom: 8px;
-      min-height: 40px;
+      margin-bottom: 6px;
+      min-height: 36px;
+      line-height: 1.4;
     }
 
     .product-subtitle {
-      font-size: $font-size-small;
+      font-size: 12px;
       color: $text-secondary;
-      margin-bottom: 12px;
+      margin-bottom: 8px;
     }
 
     .product-price {
       display: flex;
       align-items: baseline;
-      gap: 8px;
-      margin-bottom: 8px;
+      gap: 6px;
+      margin-bottom: 6px;
 
       .current-price {
-        font-size: 20px;
+        font-size: 18px;
         font-weight: bold;
         color: $primary-color;
       }
 
       .original-price {
-        font-size: $font-size-small;
+        font-size: 12px;
         color: $text-secondary;
         text-decoration: line-through;
       }
@@ -199,19 +200,21 @@ const handleAddToCart = () => {
     .product-meta {
       display: flex;
       justify-content: space-between;
-      font-size: $font-size-small;
+      font-size: 12px;
       color: $text-secondary;
     }
   }
 
   .product-action {
-    padding: 0 16px 16px;
+    padding: 0 12px 12px;
     opacity: 0;
     transform: translateY(-10px);
     transition: all 0.3s;
 
     .el-button {
       width: 100%;
+      font-size: 12px;
+      padding: 6px 12px;
     }
   }
 }

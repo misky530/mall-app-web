@@ -230,7 +230,7 @@ const fetchHomeData = async () => {
     }
 
     try {
-      const recommendRes = await homeApi.fetchRecommendProductList({ pageNum: 1, pageSize: 8 })
+      const recommendRes = await homeApi.fetchRecommendProductList({ pageNum: 1, pageSize: 18 })
       if (recommendRes && recommendRes.data) {
         recommendList.value = Array.isArray(recommendRes.data) ? recommendRes.data : []
       }
@@ -413,7 +413,7 @@ onMounted(() => {
         </div>
         <div class="product-grid">
           <ProductCard
-            v-for="product in recommendList"
+            v-for="product in recommendList.slice(0, 12)"
             :key="product.id"
             :product="product"
           />
@@ -437,7 +437,7 @@ onMounted(() => {
         </div>
         <div class="product-grid">
           <ProductCard
-            v-for="product in newProductList"
+            v-for="product in newProductList.slice(0, 12)"
             :key="product.id"
             :product="product"
           />
@@ -461,7 +461,7 @@ onMounted(() => {
         </div>
         <div class="product-grid">
           <ProductCard
-            v-for="product in hotProductList"
+            v-for="product in hotProductList.slice(0, 12)"
             :key="product.id"
             :product="product"
           />
@@ -650,15 +650,15 @@ onMounted(() => {
 
 // 品牌区域
 .brand-section-top {
-  padding: 60px 0;
+  padding: 30px 0;
   background: white;
-  margin-top: 20px;
+  margin-top: 12px;
 
   .brand-grid {
     display: grid;
     grid-template-columns: repeat(6, 1fr);
-    gap: 20px;
-    margin-top: 40px;
+    gap: 12px;
+    margin-top: 20px;
 
     .brand-item {
       text-align: center;
@@ -715,14 +715,14 @@ onMounted(() => {
 
     .flash-header-left {
       h2 {
-        font-size: 32px;
+        font-size: 24px;
         font-weight: bold;
         color: #ff4757 !important;
-        margin-bottom: 8px;
+        margin-bottom: 6px;
       }
 
       p {
-        font-size: 14px;
+        font-size: 13px;
         color: #ff6b6b !important;
       }
     }
@@ -761,7 +761,7 @@ onMounted(() => {
 
 // 商品区域通用样式
 .product-section {
-  padding: 60px 0;
+  padding: 30px 0;
 
   &:nth-child(even) {
     background: white;
@@ -770,8 +770,8 @@ onMounted(() => {
   .product-grid {
     display: grid;
     grid-template-columns: repeat(6, 1fr);
-    gap: 16px;
-    margin-top: 40px;
+    gap: 12px 10px;
+    margin-top: 20px;
   }
 }
 
@@ -782,14 +782,14 @@ onMounted(() => {
   align-items: center;
 
   h2 {
-    font-size: 32px;
+    font-size: 24px;
     font-weight: bold;
     color: $text-primary;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
   }
 
   p {
-    font-size: 14px;
+    font-size: 13px;
     color: $text-secondary;
   }
 }
