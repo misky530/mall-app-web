@@ -849,7 +849,7 @@ const activeFiltersCount = computed(() => {
     .product-list {
       &.grid {
         display: grid;
-        grid-template-columns: repeat(5, 1fr);
+        grid-template-columns: repeat(6, 1fr);
         gap: 14px 10px;
       }
 
@@ -872,6 +872,12 @@ const activeFiltersCount = computed(() => {
 }
 
 // 响应式
+@media (max-width: 1600px) {
+  .product-list.grid {
+    grid-template-columns: repeat(5, 1fr) !important;
+  }
+}
+
 @media (max-width: 1400px) {
   .product-list.grid {
     grid-template-columns: repeat(4, 1fr) !important;

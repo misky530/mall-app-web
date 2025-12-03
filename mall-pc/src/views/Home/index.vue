@@ -769,8 +769,8 @@ onMounted(() => {
 
   .product-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 20px;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 16px;
     margin-top: 40px;
   }
 }
@@ -859,13 +859,25 @@ onMounted(() => {
 }
 
 // 响应式设计
+@media (max-width: 1400px) {
+  .product-grid {
+    grid-template-columns: repeat(5, 1fr) !important;
+  }
+}
+
 @media (max-width: 1200px) {
   .product-grid {
-    grid-template-columns: repeat(3, 1fr) !important;
+    grid-template-columns: repeat(4, 1fr) !important;
   }
 
   .brand-grid {
     grid-template-columns: repeat(4, 1fr) !important;
+  }
+}
+
+@media (max-width: 992px) {
+  .product-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
   }
 }
 
