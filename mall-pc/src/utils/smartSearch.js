@@ -17,10 +17,15 @@ const synonymDict = {
   '显示器': ['屏幕', 'monitor', '显示屏', 'display'],
   '2K': ['2560×1440', 'QHD', '2k分辨率'],
   '4K': ['3840×2160', 'UHD', '4k分辨率', '超高清'],
-  '高刷': ['高刷新率', '144Hz', '165Hz', '电竞'],
-  '带鱼屏': ['超宽屏', '21:9', '曲面屏'],
-  '办公': ['商用', '企业', 'office'],
-  '游戏': ['电竞', 'gaming', '吃鸡']
+  '高刷': ['高刷新率', '144Hz', '165Hz', '电竞屏'],
+  '带鱼屏': ['超宽屏', '21:9', '曲面屏']
+};
+
+// 组合词匹配 - 需要同时包含两个词才匹配
+const combinedKeywords = {
+  '办公显示器': ['商用显示器', '企业显示器', 'office monitor', '办公屏'],
+  '游戏显示器': ['电竞显示器', 'gaming monitor', '游戏屏', '电竞屏'],
+  '设计显示器': ['专业设计', '设计屏', 'design monitor']
 };
 
 // 单位换算表
@@ -74,9 +79,38 @@ export function smartSearch(keyword, products) {
  */
 function expandSynonyms(keyword) {
   const words = new Set([keyword.toLowerCase()]);
+  const keywordLower = keyword.toLowerCase();
 
-  // 分词(简单实现:按空格和特殊字符分)
-  const tokens = keyword.toLowerCase().split(/[\s,，、]+/);
+  // 1. 优先检查组合关键词(如"办公显示器"、"游戏显示器")
+  // 这样可以避免"办公"这样的泛词匹配到文具等其他品类
+  let matchedCombined = false;
+  Object.entries(combinedKeywords).forEach(([key, synonyms]) => {
+    const keyLower = key.toLowerCase();
+    // 检查是否包含完整的组合关键词
+    if (keywordLower.includes(keyLower)) {
+      matchedCombined = true;
+      words.add(keyLower);
+      synonyms.forEach(syn => words.add(syn.toLowerCase()));
+      // 也添加组合词的各个部分,以支持部分匹配
+      keyLower.split(/[\s]+/).forEach(part => words.add(part));
+    }
+  });
+
+  // 如果已经匹配到组合关键词,不再进行泛化的同义词扩展
+  // 这样"办公显示器"只会匹配显示器相关的同义词,不会匹配到文具
+  if (matchedCombined) {
+    // 仍然需要对"显示器"、"2K"、"4K"等专有名词进行同义词扩展
+    Object.entries(synonymDict).forEach(([key, synonyms]) => {
+      if (keywordLower.includes(key.toLowerCase())) {
+        synonyms.forEach(syn => words.add(syn.toLowerCase()));
+        words.add(key.toLowerCase());
+      }
+    });
+    return Array.from(words);
+  }
+
+  // 2. 如果没有匹配组合关键词,进行常规同义词扩展
+  const tokens = keywordLower.split(/[\s,，、]+/);
 
   tokens.forEach(token => {
     words.add(token);
@@ -211,6 +245,36 @@ function calculateMatchScore(product, keywords, specs) {
     if (productSpecs.resolution.includes(specs.resolution)) {
       score += 25; // 分辨率匹配
     }
+  }
+
+  // 场景匹配(显示器) - 根据场景关键词匹配specs.scene
+  if (productSpecs.scene) {
+    const sceneLower = productSpecs.scene.toLowerCase();
+    keywords.forEach(keyword => {
+      // 游戏/电竞显示器匹配
+      if ((keyword.includes('游戏') || keyword.includes('电竞') || keyword.includes('gaming')) &&
+          sceneLower === '游戏') {
+        score += 20; // 场景匹配加分
+        // 游戏显示器通常需要高刷新率,如果有144Hz+则额外加分
+        if (productSpecs.refreshRate >= 144) {
+          score += 15;
+        }
+      }
+      // 办公显示器匹配
+      if ((keyword.includes('办公') || keyword.includes('商用') || keyword.includes('企业') || keyword.includes('office')) &&
+          sceneLower === '办公') {
+        score += 20;
+      }
+      // 设计显示器匹配
+      if ((keyword.includes('设计') || keyword.includes('专业') || keyword.includes('design')) &&
+          sceneLower === '设计') {
+        score += 20;
+        // 设计显示器通常需要高分辨率
+        if (productSpecs.resolution && (productSpecs.resolution.includes('2560') || productSpecs.resolution.includes('3840'))) {
+          score += 10;
+        }
+      }
+    });
   }
 
   // 3. 分类匹配 (最高10分)
