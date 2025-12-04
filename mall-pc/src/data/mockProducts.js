@@ -371,7 +371,7 @@ export function generateRichMockProducts() {
         recommendStatus: Math.random() > 0.6 ? 1 : 0,
         createTime: new Date(Date.now() - Math.random() * 180 * 24 * 60 * 60 * 1000).toISOString()
       })
-    })
+    }
   })
 
   console.log(`✅ 生成了 ${products.length} 个丰富的B2B商品数据`)
