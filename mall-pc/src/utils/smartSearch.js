@@ -12,7 +12,15 @@ const synonymDict = {
   '管': ['管子', '管材', '钢管', 'pipe', 'tube'],
   '板': ['板材', '钢板', 'plate', 'sheet'],
   '螺栓': ['螺丝', 'bolt', '螺钉'],
-  '电缆': ['线缆', '电线', 'cable', 'wire']
+  '电缆': ['线缆', '电线', 'cable', 'wire'],
+  // 显示器相关
+  '显示器': ['屏幕', 'monitor', '显示屏', 'display'],
+  '2K': ['2560×1440', 'QHD', '2k分辨率'],
+  '4K': ['3840×2160', 'UHD', '4k分辨率', '超高清'],
+  '高刷': ['高刷新率', '144Hz', '165Hz', '电竞'],
+  '带鱼屏': ['超宽屏', '21:9', '曲面屏'],
+  '办公': ['商用', '企业', 'office'],
+  '游戏': ['电竞', 'gaming', '吃鸡']
 };
 
 // 单位换算表
@@ -106,19 +114,33 @@ function extractSpecs(keyword) {
     // 厚度: 2mm, 厚度2毫米等
     { regex: /厚度?壁厚?\s*(\d+\.?\d*)\s*(毫米|mm)?/gi, type: 'thickness' },
     // 长度: 1米, 长度1000mm等
-    { regex: /长度?\s*(\d+\.?\d*)\s*(米|毫米|mm|m)?/gi, type: 'length' }
+    { regex: /长度?\s*(\d+\.?\d*)\s*(米|毫米|mm|m)?/gi, type: 'length' },
+    // 显示器尺寸: 27英寸, 27寸, 27"
+    { regex: /(\d+\.?\d*)\s*(英寸|寸|"|inch)/gi, type: 'screenSize' },
+    // 刷新率: 144Hz, 144赫兹
+    { regex: /(\d+)\s*(hz|赫兹|刷新率)/gi, type: 'refreshRate' },
+    // 分辨率: 2560×1440, 1920*1080
+    { regex: /(\d+)\s*[×x*]\s*(\d+)/gi, type: 'resolution' }
   ];
 
   patterns.forEach(({ regex, type }) => {
     const matches = [...keyword.matchAll(regex)];
     if (matches.length > 0) {
       const match = matches[0];
-      const value = parseFloat(match[1]);
-      const unit = match[2] || 'mm';
 
-      // 单位换算,统一为mm
-      const converter = unitConversion[unit];
-      specs[type] = converter ? converter(value) : value;
+      if (type === 'resolution') {
+        // 分辨率特殊处理
+        specs[type] = `${match[1]}×${match[2]}`;
+      } else if (type === 'screenSize' || type === 'refreshRate') {
+        // 显示器尺寸和刷新率直接使用数字
+        specs[type] = parseFloat(match[1]);
+      } else {
+        const value = parseFloat(match[1]);
+        const unit = match[2] || 'mm';
+        // 单位换算,统一为mm
+        const converter = unitConversion[unit];
+        specs[type] = converter ? converter(value) : value;
+      }
     }
   });
 
@@ -150,6 +172,7 @@ function calculateMatchScore(product, keywords, specs) {
   });
 
   // 2. 规格精确匹配 (最高30分)
+  // 钢材管材规格
   if (specs.diameter && productSpecs.diameter) {
     const diff = Math.abs(specs.diameter - productSpecs.diameter);
     const tolerance = specs.diameter * 0.1; // 10%误差
@@ -164,6 +187,30 @@ function calculateMatchScore(product, keywords, specs) {
     const diff = Math.abs(specs.thickness - productSpecs.thickness);
     if (diff === 0) score += 20;
     else if (diff <= 1) score += 10;
+  }
+
+  // 显示器规格
+  if (specs.screenSize && productSpecs.size) {
+    const diff = Math.abs(specs.screenSize - productSpecs.size);
+    if (diff === 0) {
+      score += 30; // 尺寸完全匹配
+    } else if (diff <= 1) {
+      score += 20; // 尺寸接近(±1英寸)
+    }
+  }
+
+  if (specs.refreshRate && productSpecs.refreshRate) {
+    if (specs.refreshRate === productSpecs.refreshRate) {
+      score += 25; // 刷新率完全匹配
+    } else if (Math.abs(specs.refreshRate - productSpecs.refreshRate) <= 20) {
+      score += 15; // 刷新率接近
+    }
+  }
+
+  if (specs.resolution && productSpecs.resolution) {
+    if (productSpecs.resolution.includes(specs.resolution)) {
+      score += 25; // 分辨率匹配
+    }
   }
 
   // 3. 分类匹配 (最高10分)
@@ -193,16 +240,16 @@ export function generateSearchSuggestions(keyword) {
 
   // 热门搜索词库
   const hotSearches = [
+    '27英寸显示器',
+    '2K 144Hz显示器',
+    '4K显示器',
+    '带鱼屏显示器',
     '华为手机',
-    '苹果iPhone 15',
     '小米笔记本',
     '戴尔电脑',
     '不锈钢管 Φ50mm',
     '304不锈钢板 2mm',
-    '电脑办公桌',
-    'M8内六角螺栓',
-    '工业润滑油',
-    '电缆线 3芯'
+    '电脑办公桌'
   ];
 
   // 从localStorage读取历史搜索

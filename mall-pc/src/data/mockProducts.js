@@ -34,7 +34,15 @@ export const brands = [
   // 钢材品牌
   { id: 18, name: '宝钢', keywords: ['Baosteel', '宝钢集团'] },
   { id: 19, name: '鞍钢', keywords: ['Ansteel', '鞍钢集团'] },
-  { id: 20, name: '首钢', keywords: ['Shougang', '首钢集团'] }
+  { id: 20, name: '首钢', keywords: ['Shougang', '首钢集团'] },
+
+  // 显示器品牌
+  { id: 21, name: 'AOC', keywords: ['aoc', 'AOC显示器', '冠捷'] },
+  { id: 22, name: 'LG', keywords: ['lg', 'LG显示器'] },
+  { id: 23, name: '飞利浦', keywords: ['Philips', 'philips', '飞利浦显示器'] },
+  { id: 24, name: '明基', keywords: ['BenQ', 'benq', '明基显示器'] },
+  { id: 25, name: 'HKC', keywords: ['hkc', 'HKC显示器', '惠科'] },
+  { id: 26, name: '优派', keywords: ['ViewSonic', 'viewsonic', '优派显示器'] }
 ]
 
 // 商品分类
@@ -46,7 +54,8 @@ export const categories = [
   { id: 5, name: '办公文具', parentName: '办公用品' },
   { id: 6, name: '五金工具', parentName: '工业品' },
   { id: 7, name: '钢材管材', parentName: '工业品' },
-  { id: 8, name: '劳保用品', parentName: '工业品' }
+  { id: 8, name: '劳保用品', parentName: '工业品' },
+  { id: 9, name: '显示器', parentName: '电脑办公' }
 ]
 
 // 生成丰富的商品数据
@@ -234,7 +243,89 @@ export function generateRichMockProducts() {
     })
   })
 
-  // 5. 钢材管材 (120个) - 重点展示规格搜索
+  // 5. 显示器 (150个) - 模仿京东,重点展示尺寸/分辨率/刷新率搜索
+  const monitorBrands = brands.slice(20, 26) // AOC, LG, 飞利浦, 明基, HKC, 优派
+
+  // 显示器规格组合(模仿京东)
+  const monitorSpecs = [
+    // 23.8英寸 入门办公
+    { size: 23.8, sizeDesc: '23.8英寸', resolution: '1920×1080', resolutionDesc: 'Full HD', refreshRate: 60, panel: 'IPS', price: 699, scene: '办公' },
+    { size: 23.8, sizeDesc: '23.8英寸', resolution: '1920×1080', resolutionDesc: 'Full HD', refreshRate: 75, panel: 'IPS', price: 799, scene: '办公' },
+
+    // 27英寸 主流办公/轻度设计
+    { size: 27, sizeDesc: '27英寸', resolution: '1920×1080', resolutionDesc: 'Full HD', refreshRate: 75, panel: 'IPS', price: 899, scene: '办公' },
+    { size: 27, sizeDesc: '27英寸', resolution: '2560×1440', resolutionDesc: '2K QHD', refreshRate: 75, panel: 'IPS', price: 1299, scene: '设计' },
+    { size: 27, sizeDesc: '27英寸', resolution: '2560×1440', resolutionDesc: '2K QHD', refreshRate: 144, panel: 'IPS', price: 1599, scene: '游戏' },
+    { size: 27, sizeDesc: '27英寸', resolution: '2560×1440', resolutionDesc: '2K QHD', refreshRate: 165, panel: 'Fast IPS', price: 1899, scene: '电竞' },
+
+    // 31.5英寸 大屏办公/设计
+    { size: 31.5, sizeDesc: '31.5英寸', resolution: '2560×1440', resolutionDesc: '2K QHD', refreshRate: 75, panel: 'IPS', price: 1499, scene: '设计' },
+    { size: 31.5, sizeDesc: '31.5英寸', resolution: '3840×2160', resolutionDesc: '4K UHD', refreshRate: 60, panel: 'IPS', price: 2299, scene: '专业设计' },
+
+    // 34英寸 带鱼屏
+    { size: 34, sizeDesc: '34英寸', resolution: '3440×1440', resolutionDesc: '带鱼屏 2K', refreshRate: 100, panel: 'IPS', price: 2199, scene: '游戏办公' },
+    { size: 34, sizeDesc: '34英寸', resolution: '3440×1440', resolutionDesc: '带鱼屏 2K', refreshRate: 144, panel: 'Nano IPS', price: 2999, scene: '电竞' }
+  ]
+
+  monitorBrands.forEach((brand, bi) => {
+    monitorSpecs.forEach((spec, si) => {
+      const id = 90000 + bi * 100 + si * 5
+
+      // 每种规格生成2-3个不同型号
+      for (let i = 0; i < 2; i++) {
+        const model = `M${spec.size.toString().replace('.', '')}${spec.refreshRate}${i > 0 ? 'Pro' : ''}`
+        const hasHDR = spec.price > 1500 && Math.random() > 0.5
+        const hasUSBC = spec.price > 1200 && Math.random() > 0.6
+
+        // 构建功能特性
+        const features = []
+        if (spec.refreshRate >= 144) features.push('高刷新率')
+        if (spec.resolution.includes('2560') || spec.resolution.includes('3840')) features.push('高分辨率')
+        if (hasHDR) features.push('HDR400')
+        if (hasUSBC) features.push('Type-C反向充电')
+        if (spec.panel.includes('Fast') || spec.panel.includes('Nano')) features.push('专业电竞')
+        features.push('低蓝光')
+        features.push('不闪屏')
+
+        const priceAdjust = i * 200 + (hasHDR ? 300 : 0) + (hasUSBC ? 200 : 0)
+
+        products.push({
+          id: id + i,
+          name: `${brand.name} ${spec.sizeDesc} 显示器 ${model} ${spec.resolutionDesc} ${spec.refreshRate}Hz ${spec.panel}`,
+          subTitle: `${features.slice(0, 4).join(' ')} ${spec.scene}显示器 企业批量采购`,
+          price: spec.price + priceAdjust,
+          originalPrice: Math.round((spec.price + priceAdjust) * 1.3),
+          pic: `https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?w=400&h=400&fit=crop`,
+          sale: Math.floor(Math.random() * 8000) + 1000,
+          stock: Math.floor(Math.random() * 500) + 100,
+          commentCount: Math.floor(Math.random() * 3000) + 500,
+          brandId: brand.id,
+          brandName: brand.name,
+          productCategoryId: 9,
+          categoryName: '显示器',
+          keywords: `${brand.keywords.join(' ')} 显示器 monitor 屏幕 ${spec.sizeDesc} ${spec.size}英寸 ${spec.resolution} ${spec.resolutionDesc} ${spec.refreshRate}Hz ${spec.panel} ${spec.scene} ${features.join(' ')}`,
+          specs: {
+            size: spec.size,
+            sizeUnit: '英寸',
+            resolution: spec.resolution,
+            resolutionDesc: spec.resolutionDesc,
+            refreshRate: spec.refreshRate,
+            refreshRateUnit: 'Hz',
+            panel: spec.panel,
+            scene: spec.scene,
+            hdr: hasHDR,
+            typeC: hasUSBC,
+            features: features
+          },
+          newStatus: Math.random() > 0.8 ? 1 : 0,
+          recommendStatus: Math.random() > 0.6 ? 1 : 0,
+          createTime: new Date(Date.now() - Math.random() * 60 * 24 * 60 * 60 * 1000).toISOString()
+        })
+      }
+    })
+  })
+
+  // 6. 钢材管材 (120个) - 重点展示规格搜索
   const steelBrands = brands.slice(17, 20)
   const steelTypes = [
     { type: '不锈钢管', material: '304不锈钢' },
@@ -336,7 +427,7 @@ export function generateRichMockProducts() {
     })
   })
 
-  // 6. 劳保用品 (60个)
+  // 7. 劳保用品 (60个)
   const safetyItems = [
     { name: '安全帽', price: 15 },
     { name: '防护手套', price: 8 },
