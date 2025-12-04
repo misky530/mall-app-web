@@ -303,7 +303,7 @@ onMounted(() => {
         &:hover {
           transform: translateY(-4px);
           box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-          border-color: $color-primary;
+          border-color: $primary-color;
         }
 
         .hot-badge {
@@ -439,7 +439,7 @@ onMounted(() => {
 
         &:hover {
           background: #fafafa;
-          border-color: $color-primary;
+          border-color: $primary-color;
         }
 
         .rank-badge {

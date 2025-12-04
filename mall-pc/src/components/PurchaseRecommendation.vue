@@ -186,7 +186,7 @@ onMounted(() => {
 
         .el-icon {
           font-size: 20px;
-          color: $color-primary;
+          color: $primary-color;
         }
       }
 
@@ -205,7 +205,7 @@ onMounted(() => {
         transition: color 0.3s;
 
         &:hover {
-          color: $color-primary;
+          color: $primary-color;
         }
       }
     }
@@ -311,7 +311,7 @@ onMounted(() => {
               transition: color 0.3s;
 
               &:hover {
-                color: $color-primary;
+                color: $primary-color;
               }
             }
 
@@ -366,7 +366,7 @@ onMounted(() => {
                 color: $text-primary;
 
                 &.primary {
-                  color: $color-primary;
+                  color: $primary-color;
                   font-size: 18px;
                 }
               }
