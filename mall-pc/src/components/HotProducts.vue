@@ -2,7 +2,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { Fire, TrendCharts, ShoppingCart } from '@element-plus/icons-vue'
+import { TrendCharts, ShoppingCart } from '@element-plus/icons-vue'
 import { getHotProducts, getHotProductsByCategory, recordProductView } from '@/utils/hotProductsRecommendation'
 
 const props = defineProps({
@@ -93,7 +93,7 @@ onMounted(() => {
   <div class="hot-products" :class="`mode-${mode}`">
     <div class="section-header">
       <h3>
-        <el-icon><Fire /></el-icon>
+        <span class="fire-emoji">🔥</span>
         {{ categoryId ? '分类热销' : '热门商品' }}
       </h3>
       <p class="subtitle">基于多维度数据的AI推荐</p>
@@ -251,9 +251,9 @@ onMounted(() => {
       align-items: center;
       gap: 8px;
 
-      .el-icon {
+      .fire-emoji {
         font-size: 20px;
-        color: #ff4d4f;
+        line-height: 1;
       }
     }
 
