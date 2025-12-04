@@ -3,6 +3,8 @@
  * 基于浏览量、销量、评分等多维度计算商品热度
  */
 
+import generateRichMockProducts from '@/data/mockProducts'
+
 /**
  * 从localStorage模拟获取商品统计数据
  */
@@ -124,22 +126,8 @@ function generateProductTags(product, stats) {
  * 获取所有商品(模拟)
  */
 function getAllProducts() {
-  const products = [];
-
-  // 尝试从localStorage读取
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i);
-    if (key && key.startsWith('product_')) {
-      try {
-        const product = JSON.parse(localStorage.getItem(key));
-        products.push(product);
-      } catch (e) {
-        // 忽略解析错误
-      }
-    }
-  }
-
-  return products;
+  // 直接使用丰富的B2B商品数据
+  return generateRichMockProducts();
 }
 
 /**
