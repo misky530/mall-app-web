@@ -1,5 +1,6 @@
 import request from '@/utils/request'
 import searchEngine from '@/utils/searchEngine'
+import { smartSearch as aiSmartSearch, saveSearchHistory, getSearchInsights } from '@/utils/smartSearch'
 
 /**
  * 搜索商品列表
@@ -51,34 +52,60 @@ export async function smartSearch(params, filters = {}) {
     console.warn('⚠️ 后端搜索失败，切换到前端搜索:', error.message)
   }
 
-  // 2. 降级到前端搜索引擎
-  console.log('🔍 使用前端 Fuse.js 搜索引擎...')
-  
+  // 2. 降级到前端AI智能搜索引擎
+  console.log('🔍 使用前端AI智能搜索引擎（支持同义词+规格识别）...')
+
   // 生成或加载 Mock 数据
   const mockData = generateMockProducts()
-  searchEngine.setData(mockData)
 
-  // 执行搜索
-  let results = keyword ? searchEngine.search(keyword) : mockData.map(item => ({ item, score: 0 }))
+  // 使用AI智能搜索（支持同义词、规格提取）
+  let results = keyword ? aiSmartSearch(keyword, mockData) : mockData
 
-  // 应用筛选条件
-  results = searchEngine.applyFilters(results, filters)
+  // 应用额外筛选条件
+  if (filters.brandId) {
+    results = results.filter(p => p.brandId === filters.brandId)
+  }
+  if (filters.categoryId) {
+    results = results.filter(p => p.productCategoryId === filters.categoryId)
+  }
+  if (filters.minPrice !== null && filters.minPrice !== undefined) {
+    results = results.filter(p => p.price >= filters.minPrice)
+  }
+  if (filters.maxPrice !== null && filters.maxPrice !== undefined) {
+    results = results.filter(p => p.price <= filters.maxPrice)
+  }
 
-  // 排序
+  // 排序（AI搜索已按匹配分数排序，这里处理其他排序）
   const sortType = getSortTypeFromValue(sort)
-  results = searchEngine.sortResults(results, sortType)
+  if (sortType !== 'relevance' && keyword) {
+    results = sortResultsByType(results, sortType)
+  } else if (!keyword) {
+    results = sortResultsByType(results, sortType)
+  }
+
+  // 保存搜索历史
+  if (keyword) {
+    saveSearchHistory(keyword)
+  }
 
   // 分页
   const start = (pageNum - 1) * pageSize
   const end = start + pageSize
   const paginatedResults = results.slice(start, end)
 
-  console.log('✅ 前端搜索完成:', results.length, '个结果，显示', paginatedResults.length, '个')
+  // 获取搜索洞察
+  const insights = keyword ? getSearchInsights(keyword, results) : []
+  if (insights.length > 0) {
+    console.log('🔍 搜索洞察:', insights.join(', '))
+  }
+
+  console.log('✅ AI智能搜索完成:', results.length, '个结果，显示', paginatedResults.length, '个')
 
   return {
-    list: paginatedResults.map(r => r.item),
+    list: paginatedResults,
     total: results.length,
-    source: 'local'
+    source: 'local',
+    insights
   }
 }
 
@@ -95,6 +122,28 @@ function getSortTypeFromValue(sort) {
     5: 'comment'
   }
   return sortMap[sort] || 'relevance'
+}
+
+/**
+ * 按类型排序结果
+ */
+function sortResultsByType(results, sortType) {
+  const sorted = [...results]
+
+  switch (sortType) {
+    case 'sale':
+      return sorted.sort((a, b) => (b.sale || 0) - (a.sale || 0))
+    case 'price_asc':
+      return sorted.sort((a, b) => (a.price || 0) - (b.price || 0))
+    case 'price_desc':
+      return sorted.sort((a, b) => (b.price || 0) - (a.price || 0))
+    case 'new':
+      return sorted.sort((a, b) => new Date(b.createTime || 0) - new Date(a.createTime || 0))
+    case 'comment':
+      return sorted.sort((a, b) => (b.commentCount || 0) - (a.commentCount || 0))
+    default:
+      return sorted
+  }
 }
 
 /**

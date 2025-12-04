@@ -3,6 +3,8 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ArrowRight } from '@element-plus/icons-vue'
 import ProductCard from '@/components/Product/ProductCard.vue'
+import PurchaseRecommendation from '@/components/PurchaseRecommendation.vue'
+import HotProducts from '@/components/HotProducts.vue'
 import { useProductStore } from '@/stores/product'
 import * as homeApi from '@/api/home'
 
@@ -395,6 +397,20 @@ onMounted(() => {
             :product="product"
           />
         </div>
+      </div>
+    </section>
+
+    <!-- AI智能采购推荐 -->
+    <section class="product-section ai-recommendation-section">
+      <div class="container">
+        <PurchaseRecommendation />
+      </div>
+    </section>
+
+    <!-- AI热门商品推荐 -->
+    <section class="product-section ai-hot-section">
+      <div class="container">
+        <HotProducts :limit="12" mode="grid" />
       </div>
     </section>
 
